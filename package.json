@@ -1,0 +1,11 @@
+{
+  "name": "vibecheck-kumustahan",
+  "version": "1.0.0",
+  "description": "A Daily 30-Second Kumustahan Web App - UST 3CSC Group 2",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.34.0"
+  }
+}
