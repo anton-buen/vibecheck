@@ -1,789 +1,117 @@
-// ========== 8-Bit Web Audio Synthesizer ==========
+// ========== 8-Bit Sound Engine ==========
 const SoundFX = {
-  audioContext: null,
-  isMuted: false,
-
+  ctx: null,
+  enabled: true,
+  
   init() {
-    this.isMuted = localStorage.getItem('vibecheck_sound_muted') === 'true';
-    this.updateSoundIcon();
+    this.enabled = localStorage.getItem('vibecheck_sound') !== 'false';
+    this.updateUI();
   },
-
-  getContext() {
-    if (!this.audioContext) {
-      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  
+  createContext() {
+    if (!this.ctx) {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
     }
-    return this.audioContext;
+    return this.ctx;
   },
-
+  
   play(type) {
-    if (this.isMuted) return;
+    if (!this.enabled) return;
     
-    const ctx = this.getContext();
-    const now = ctx.currentTime;
-
-    switch (type) {
-      case 'detent':
-        // Short 8-bit tick for dial movement
-        this.playTone(ctx, 660, now, 0.05, 0.15, 'square');
-        break;
+    try {
+      const ctx = this.createContext();
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
       
-      case 'click':
-        // UI interaction blip
-        this.playTone(ctx, 520, now, 0.04, 0.12, 'square');
-        break;
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
       
-      case 'submit':
-        // 3-note ascending arpeggio chime
-        this.playTone(ctx, 523, now, 0.08, 0.2, 'triangle');
-        this.playTone(ctx, 659, now + 0.08, 0.08, 0.2, 'triangle');
-        this.playTone(ctx, 784, now + 0.16, 0.12, 0.25, 'triangle');
-        break;
+      oscillator.type = 'square';
+      gainNode.gain.setValueAtTime(0.08, ctx.currentTime);
       
-      case 'success':
-        // Warm confirmation tone
-        this.playTone(ctx, 880, now, 0.1, 0.3, 'sine');
-        break;
-    }
-  },
-
-  playTone(ctx, frequency, startTime, duration, volume = 0.2, waveType = 'square') {
-    const oscillator = ctx.createOscillator();
-    const gainNode = ctx.createGain();
-    
-    oscillator.type = waveType;
-    oscillator.frequency.setValueAtTime(frequency, startTime);
-    
-    gainNode.gain.setValueAtTime(0, startTime);
-    gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.01);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
-    
-    oscillator.start(startTime);
-    oscillator.stop(startTime + duration);
-  },
-
-  toggle() {
-    this.isMuted = !this.isMuted;
-    localStorage.setItem('vibecheck_sound_muted', this.isMuted);
-    this.updateSoundIcon();
-    if (!this.isMuted) {
-      this.play('click');
-    }
-  },
-
-  updateSoundIcon() {
-    const iconOn = document.getElementById('icon-sound-on');
-    const iconOff = document.getElementById('icon-sound-off');
-    if (this.isMuted) {
-      iconOn.classList.add('hidden');
-      iconOff.classList.remove('hidden');
-    } else {
-      iconOn.classList.remove('hidden');
-      iconOff.classList.add('hidden');
-    }
-  }
-};
-
-// ========== Configuration ==========
-const PROMPTS = [
-  "Kumusta ka today, 1–5?",
-  "Anong pinakamabigat sa'yo ngayon?",
-  'Beyond "Okay lang" — how is your energy right now?',
-];
-
-const VIBE_CONFIG = {
-  1: {
-    color: "#FF3B30",
-    dark: "#C81E1E",
-    label: "Mabigat",
-    sublabel: "Overwhelmed",
-    hint: "Heavy day — reach out if you need someone",
-  },
-  2: {
-    color: "#FF8A00",
-    dark: "#C25900",
-    label: "Pagod",
-    sublabel: "Drained",
-    hint: "Running low on energy",
-  },
-  3: {
-    color: "#F5B800",
-    dark: "#B45309",
-    label: "Sakto lang",
-    sublabel: "Surviving",
-    hint: "Pushing through today",
-  },
-  4: {
-    color: "#34C759",
-    dark: "#15803D",
-    label: "Maayos",
-    sublabel: "Doing Well",
-    hint: "Feeling grounded and good",
-  },
-  5: {
-    color: "#00B8A9",
-    dark: "#0F766E",
-    label: "Masaya",
-    sublabel: "Thriving",
-    hint: "Great day — ready to support others!",
-  },
-};
-
-const OCTO_MOOD_THEMES = {
-  1: {
-    bodyMain: '#F44336',
-    bodyDark: '#D32F2F',
-    bodyLight: '#FF7961',
-    rimColor: '#B0BEC5',
-    brows: `<path d="M92,102 L122,113" stroke="#111111" stroke-width="5.5" stroke-linecap="round"/>
-            <path d="M188,101 L162,113" stroke="#111111" stroke-width="5.5" stroke-linecap="round"/>`,
-    eyes: `<ellipse cx="108" cy="121" rx="11" ry="13.5" fill="#111111"/>
-           <circle cx="112" cy="115" r="3.8" fill="#FFFFFF"/>
-           <ellipse cx="174" cy="120" rx="10" ry="13" fill="#111111"/>
-           <circle cx="177" cy="114" r="3.5" fill="#FFFFFF"/>`,
-    mouth: `<path d="M136,144 C138,133 149,133 151,144" fill="none" stroke="#111111" stroke-width="4.5" stroke-linecap="round"/>`,
-    cheeks: ''
-  },
-  2: {
-    bodyMain: '#FB8C00',
-    bodyDark: '#E65100',
-    bodyLight: '#FFB74D',
-    rimColor: '#CFD8DC',
-    brows: `<path d="M93,109 L121,102" stroke="#111111" stroke-width="5" stroke-linecap="round"/>
-            <path d="M187,108 L163,102" stroke="#111111" stroke-width="5" stroke-linecap="round"/>`,
-    eyes: `<ellipse cx="108" cy="121" rx="11" ry="13" fill="#111111"/>
-           <circle cx="112" cy="115" r="3.8" fill="#FFFFFF"/>
-           <ellipse cx="174" cy="120" rx="10" ry="12.5" fill="#111111"/>
-           <circle cx="177" cy="114" r="3.5" fill="#FFFFFF"/>`,
-    mouth: `<path d="M135,143 Q143.5,136 152,143" fill="none" stroke="#111111" stroke-width="4.5" stroke-linecap="round"/>`,
-    cheeks: ''
-  },
-  3: {
-    bodyMain: '#FBC02D',
-    bodyDark: '#F57F17',
-    bodyLight: '#FFF176',
-    rimColor: '#CFD8DC',
-    brows: `<path d="M95,104 Q108,102 120,104" fill="none" stroke="#111111" stroke-width="4.8" stroke-linecap="round"/>
-            <path d="M164,104 Q175,102 186,104" fill="none" stroke="#111111" stroke-width="4.8" stroke-linecap="round"/>`,
-    eyes: `<ellipse cx="108" cy="121" rx="11" ry="13" fill="#111111"/>
-           <circle cx="112" cy="115" r="3.8" fill="#FFFFFF"/>
-           <ellipse cx="174" cy="120" rx="10" ry="12.5" fill="#111111"/>
-           <circle cx="177" cy="114" r="3.5" fill="#FFFFFF"/>`,
-    mouth: `<line x1="136" y1="140" x2="152" y2="140" stroke="#111111" stroke-width="4.5" stroke-linecap="round"/>`,
-    cheeks: `<ellipse cx="90" cy="134" rx="8" ry="4.5" fill="#F43F5E" opacity="0.22"/>
-             <ellipse cx="189" cy="132" rx="7.5" ry="4.2" fill="#F43F5E" opacity="0.22"/>`
-  },
-  4: {
-    bodyMain: '#2EBD59',
-    bodyDark: '#1B8A3D',
-    bodyLight: '#69F0AE',
-    rimColor: '#CFD8DC',
-    brows: `<path d="M95,102 Q108,97 120,102" fill="none" stroke="#111111" stroke-width="4.8" stroke-linecap="round"/>
-            <path d="M164,102 Q175,97 186,102" fill="none" stroke="#111111" stroke-width="4.8" stroke-linecap="round"/>`,
-    eyes: `<ellipse cx="108" cy="121" rx="11" ry="13" fill="#111111"/>
-           <circle cx="112" cy="115" r="3.8" fill="#FFFFFF"/>
-           <ellipse cx="174" cy="120" rx="10" ry="12.5" fill="#111111"/>
-           <circle cx="177" cy="114" r="3.5" fill="#FFFFFF"/>`,
-    mouth: `<path d="M134,137 Q143.5,147 153,137" fill="none" stroke="#111111" stroke-width="4.5" stroke-linecap="round"/>`,
-    cheeks: `<ellipse cx="90" cy="134" rx="8.5" ry="4.8" fill="#F43F5E" opacity="0.35"/>
-             <ellipse cx="189" cy="132" rx="8" ry="4.5" fill="#F43F5E" opacity="0.35"/>`
-  },
-  5: {
-    bodyMain: '#14B8A6',
-    bodyDark: '#0F766E',
-    bodyLight: '#5EEAD4',
-    rimColor: '#CFD8DC',
-    brows: `<path d="M94,99 Q108,93 120,99" fill="none" stroke="#111111" stroke-width="4.8" stroke-linecap="round"/>
-            <path d="M164,99 Q175,93 186,99" fill="none" stroke="#111111" stroke-width="4.8" stroke-linecap="round"/>`,
-    eyes: `<ellipse cx="108" cy="120" rx="11.5" ry="13.5" fill="#111111"/>
-           <circle cx="112" cy="114" r="4" fill="#FFFFFF"/>
-           <ellipse cx="174" cy="119" rx="10.5" ry="13" fill="#111111"/>
-           <circle cx="177" cy="113" r="3.8" fill="#FFFFFF"/>`,
-    mouth: `<path d="M132,135 Q143.5,152 155,135 Z" fill="#111111" stroke="#111111" stroke-width="2.5" stroke-linejoin="round"/>
-            <path d="M137,142 Q143.5,148 150,142" fill="#FF6B8B"/>`,
-    cheeks: `<ellipse cx="90" cy="134" rx="9.5" ry="5.2" fill="#F43F5E" opacity="0.5"/>
-             <ellipse cx="189" cy="132" rx="9" ry="5" fill="#F43F5E" opacity="0.5"/>`
-  }
-};
-
-function renderBrandOctopusSvg(level = 1, sizeClass = 'w-28 h-24') {
-  const t = OCTO_MOOD_THEMES[level] || OCTO_MOOD_THEMES[1];
-  const uid = `octo-${level}-${Math.random().toString(36).slice(2, 6)}`;
-
-  return `
-    <svg viewBox="0 0 260 220" class="${sizeClass} select-none" aria-label="vibecheck mascot level ${level}">
-      <defs>
-        <radialGradient id="${uid}-dome" cx="38%" cy="28%" r="70%">
-          <stop offset="0%" stop-color="${t.bodyLight}" />
-          <stop offset="45%" stop-color="${t.bodyMain}" />
-          <stop offset="100%" stop-color="${t.bodyDark}" />
-        </radialGradient>
-      </defs>
-      <path d="M52,142 C18,144 10,162 24,171 C38,179 62,171 76,161 Z" fill="${t.bodyDark}"/>
-      <path d="M16,163 C22,173 46,174 68,163 L64,157 C45,166 25,165 18,158 Z" fill="${t.rimColor}"/>
-      <path d="M196,138 C232,140 246,156 232,167 C218,177 192,169 178,158 Z" fill="${t.bodyDark}"/>
-      <path d="M238,159 C232,169 208,171 186,160 L190,154 C209,163 229,162 236,154 Z" fill="${t.rimColor}"/>
-      <path d="M46,144 C44,72 82,34 134,34 C186,34 212,74 208,140 C206,156 174,164 132,164 C86,164 48,158 46,144 Z" fill="url(#${uid}-dome)"/>
-      <path d="M56,134 C54,82 80,48 122,44" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" opacity="0.28"/>
-      <path d="M134,47 C138,44 146,46 146,51 C146,56 136,58 129,55 C121,52 122,43 133,41 C145,39 156,45 154,53" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.45"/>
-      <path d="M74,152 C52,168 58,187 78,186 C95,185 104,171 108,159 Z" fill="${t.bodyMain}"/>
-      <path d="M58,176 C64,187 86,188 102,174 L97,169 C84,180 67,180 61,171 Z" fill="${t.rimColor}"/>
-      <path d="M168,151 C192,166 196,184 176,185 C158,186 146,172 142,159 Z" fill="${t.bodyMain}"/>
-      <path d="M192,175 C186,186 164,187 148,173 L153,168 C166,179 183,179 189,170 Z" fill="${t.rimColor}"/>
-      <path d="M107,158 C96,181 106,199 127,199 C148,199 156,181 144,158 Z" fill="${t.bodyMain}"/>
-      <path d="M101,185 C108,199 144,199 151,185 L145,181 C139,192 113,192 107,181 Z" fill="${t.rimColor}"/>
-      ${t.cheeks}
-      ${t.eyes}
-      ${t.brows}
-      ${t.mouth}
-    </svg>
-  `;
-}
-
-// ========== State ==========
-let promptIndex = 0;
-let selectedLevel = 3;
-let selectedTags = new Set();
-let pulses = [];
-let roomMembers = [];
-let currentRoom = 'general';
-let userProfile = null;
-let currentFilter = 'all';
-let currentView = 'checkin';
-let currentIcebreakerIndex = 0;
-
-// ========== Radial Dial Controller ==========
-const RadialDial = {
-  svg: null,
-  handle: null,
-  progressArc: null,
-  detentNodes: null,
-  isDragging: false,
-  currentLevel: 3,
-  centerX: 150,
-  centerY: 150,
-  radius: 120,
-
-  init() {
-    this.svg = document.getElementById('radial-dial');
-    this.handle = document.getElementById('dial-handle');
-    this.progressArc = document.getElementById('progress-arc');
-    this.detentNodes = document.querySelectorAll('.detent-node');
-
-    // Touch and mouse events
-    this.svg.addEventListener('mousedown', this.onPointerDown.bind(this));
-    this.svg.addEventListener('touchstart', this.onPointerDown.bind(this), { passive: false });
-    document.addEventListener('mousemove', this.onPointerMove.bind(this));
-    document.addEventListener('touchmove', this.onPointerMove.bind(this), { passive: false });
-    document.addEventListener('mouseup', this.onPointerUp.bind(this));
-    document.addEventListener('touchend', this.onPointerUp.bind(this));
-
-    // Click detent nodes
-    this.detentNodes.forEach(node => {
-      node.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const level = parseInt(node.dataset.level);
-        this.setLevel(level, true);
-      });
-    });
-
-    this.setLevel(3, false);
-  },
-
-  onPointerDown(e) {
-    e.preventDefault();
-    this.isDragging = true;
-    this.handle.classList.add('dragging');
-    this.updateFromEvent(e);
-  },
-
-  onPointerMove(e) {
-    if (!this.isDragging) return;
-    e.preventDefault();
-    this.updateFromEvent(e);
-  },
-
-  onPointerUp(e) {
-    if (!this.isDragging) return;
-    this.isDragging = false;
-    this.handle.classList.remove('dragging');
-  },
-
-  updateFromEvent(e) {
-    const rect = this.svg.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
-    
-    const dx = x - this.centerX;
-    const dy = y - this.centerY;
-    
-    // Calculate angle (0 = top, clockwise)
-    let angle = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
-    if (angle < 0) angle += 360;
-    
-    // Map angle to level 1-5
-    // Level 1: 0°, Level 2: 72°, Level 3: 144°, Level 4: 216°, Level 5: 288°
-    const segmentSize = 360 / 5;
-    let level = Math.round(angle / segmentSize) + 1;
-    if (level > 5) level = 1;
-    
-    if (level !== this.currentLevel) {
-      this.setLevel(level, true);
-    }
-  },
-
-  setLevel(level, playSound = true) {
-    if (level < 1 || level > 5 || level === this.currentLevel) return;
-    
-    this.currentLevel = level;
-    selectedLevel = level;
-    
-    if (playSound) {
-      SoundFX.play('detent');
-    }
-    
-    this.updateVisuals();
-    updateVibeLabel(level);
-  },
-
-  updateVisuals() {
-    const level = this.currentLevel;
-    const config = VIBE_CONFIG[level];
-    
-    // Update progress arc
-    const circumference = 2 * Math.PI * this.radius;
-    const progress = level / 5;
-    const dashOffset = circumference * (1 - progress);
-    this.progressArc.style.strokeDashoffset = dashOffset;
-    this.progressArc.style.stroke = config.color;
-    
-    // Update handle position and color
-    // Level positions (degrees from top): 1=0, 2=72, 3=144, 4=216, 5=288
-    const angles = { 1: 0, 2: 72, 3: 144, 4: 216, 5: 288 };
-    const angle = angles[level];
-    const radians = (angle - 90) * (Math.PI / 180);
-    const handleX = this.centerX + this.radius * Math.cos(radians);
-    const handleY = this.centerY + this.radius * Math.sin(radians);
-    
-    this.handle.setAttribute('cx', handleX);
-    this.handle.setAttribute('cy', handleY);
-    this.handle.style.fill = config.color;
-    
-    // Update detent nodes
-    this.detentNodes.forEach(node => {
-      const nodeLevel = parseInt(node.dataset.level);
-      if (nodeLevel === level) {
-        node.classList.add('active');
-        node.style.fill = config.color;
-      } else {
-        node.classList.remove('active');
-        node.style.fill = '#FFF';
+      switch(type) {
+        case 'tap':
+          // Crisp high blip for UI interactions
+          oscillator.frequency.setValueAtTime(800, ctx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+          oscillator.start(ctx.currentTime);
+          oscillator.stop(ctx.currentTime + 0.05);
+          break;
+          
+        case 'vibe1':
+          oscillator.frequency.setValueAtTime(220, ctx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+          oscillator.start(ctx.currentTime);
+          oscillator.stop(ctx.currentTime + 0.08);
+          break;
+          
+        case 'vibe2':
+          oscillator.frequency.setValueAtTime(293, ctx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+          oscillator.start(ctx.currentTime);
+          oscillator.stop(ctx.currentTime + 0.08);
+          break;
+          
+        case 'vibe3':
+          oscillator.frequency.setValueAtTime(349, ctx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+          oscillator.start(ctx.currentTime);
+          oscillator.stop(ctx.currentTime + 0.08);
+          break;
+          
+        case 'vibe4':
+          oscillator.frequency.setValueAtTime(440, ctx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+          oscillator.start(ctx.currentTime);
+          oscillator.stop(ctx.currentTime + 0.08);
+          break;
+          
+        case 'vibe5':
+          oscillator.frequency.setValueAtTime(523, ctx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+          oscillator.start(ctx.currentTime);
+          oscillator.stop(ctx.currentTime + 0.08);
+          break;
+          
+        case 'submit':
+          // 3-note confirmation arpeggio
+          const notes = [440, 554, 659]; // A, C#, E
+          notes.forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.08);
+            gain.gain.setValueAtTime(0.06, ctx.currentTime + i * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.08 + 0.12);
+            osc.start(ctx.currentTime + i * 0.08);
+            osc.stop(ctx.currentTime + i * 0.08 + 0.12);
+          });
+          break;
       }
-    });
+    } catch (e) {
+      console.warn('Sound playback failed:', e);
+    }
+  },
+  
+  toggle() {
+    this.enabled = !this.enabled;
+    localStorage.setItem('vibecheck_sound', this.enabled);
+    this.updateUI();
+    if (this.enabled) this.play('tap');
+  },
+  
+  updateUI() {
+    const btn = document.getElementById('btn-sound-toggle');
+    if (btn) {
+      btn.classList.toggle('sound-off', !this.enabled);
+      btn.title = this.enabled ? 'Mute Sound' : 'Unmute Sound';
+    }
   }
 };
 
-// ========== Room Management ==========
-function getRoomFromURL() {
-  const params = new URLSearchParams(window.location.search);
-  const room = params.get('room');
-  return room ? room.toLowerCase().replace(/[^a-z0-9-]/g, '').substring(0, 50) : 'general';
-}
-
-function setRoomInURL(roomId) {
-  const url = new URL(window.location);
-  url.searchParams.set('room', roomId);
-  window.history.pushState({}, '', url);
-}
-
-function getUserProfile() {
-  const saved = localStorage.getItem('vibecheck_profile');
-  return saved ? JSON.parse(saved) : null;
-}
-
-function saveUserProfile(name, role) {
-  const profile = { name, role, savedAt: new Date().toISOString() };
-  localStorage.setItem('vibecheck_profile', JSON.stringify(profile));
-  return profile;
-}
-
-async function switchRoom(newRoomId) {
-  if (!newRoomId) return;
-  
-  currentRoom = newRoomId.toLowerCase().replace(/[^a-z0-9-]/g, '').substring(0, 50) || 'general';
-  setRoomInURL(currentRoom);
-  document.getElementById('room-label').textContent = currentRoom;
-  document.getElementById('current-room-code').textContent = currentRoom;
-  
-  await loadPulses();
-  renderMemberPills();
-}
-
-async function joinRoom(name, role) {
-  try {
-    const res = await fetch("/api/pulses", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        action: 'join',
-        room: currentRoom,
-        name,
-        role 
-      }),
-    });
-    const data = await res.json();
-    if (res.ok && data.members) {
-      roomMembers = data.members;
-      renderMemberPills();
-    }
-  } catch (err) {
-    console.error('Failed to join room:', err);
-  }
-}
-
-// ========== API Integration ==========
-async function loadPulses() {
-  const syncText = document.getElementById("sync-status");
-  try {
-    const res = await fetch(`/api/pulses?room=${currentRoom}`);
-    const data = await res.json();
-    if (res.ok && data.room) {
-      pulses = data.pulses || [];
-      roomMembers = data.members || [];
-      localStorage.setItem(`vibecheck_backup_${currentRoom}`, JSON.stringify(pulses));
-      syncText.textContent = "Live on Vercel";
-      syncText.classList.add("live");
-    } else {
-      throw new Error("Fallback to local");
-    }
-  } catch {
-    pulses = JSON.parse(localStorage.getItem(`vibecheck_backup_${currentRoom}`) || "[]");
-    roomMembers = [];
-    syncText.textContent = "Local Preview";
-    syncText.classList.remove("live");
-  }
-  renderBoard();
-  updatePriorityBanner();
-  renderMemberPills();
-  updateBoardBadge();
-}
-
-async function savePulse(payload) {
-  const btn = document.getElementById("btn-submit");
-  const originalText = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = 'Sending...';
-
-  try {
-    const res = await fetch("/api/pulses", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...payload, room: currentRoom }),
-    });
-    const data = await res.json();
-    if (res.ok && data.pulses) {
-      pulses = data.pulses;
-      localStorage.setItem(`vibecheck_backup_${currentRoom}`, JSON.stringify(pulses));
-    } else {
-      throw new Error("API unavailable");
-    }
-  } catch {
-    const localEntry = {
-      ...payload,
-      id: Date.now().toString(),
-      updatedAt: new Date().toISOString(),
-    };
-    pulses = [
-      localEntry,
-      ...pulses.filter(
-        (p) => p.name.toLowerCase() !== payload.name.toLowerCase(),
-      ),
-    ];
-    localStorage.setItem(`vibecheck_backup_${currentRoom}`, JSON.stringify(pulses));
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = 'Check-in sent';
-    SoundFX.play('submit');
-    showToast("Check-in shared successfully");
-    setTimeout(() => (btn.innerHTML = originalText), 2000);
-    await loadPulses();
-    resetForm();
-  }
-}
-
-// ========== UI Rendering ==========
-function timeAgo(iso) {
-  const diffMins = Math.max(
-    1,
-    Math.floor((Date.now() - new Date(iso).getTime()) / 60000),
-  );
-  if (diffMins < 60) return `${diffMins}m ago`;
-  const hrs = Math.floor(diffMins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
-
-function renderMemberPills() {
-  const container = document.getElementById("member-pills");
-  const section = document.getElementById("member-pills-container");
-  if (!container) return;
-
-  if (roomMembers.length === 0) {
-    section.classList.add('hidden');
-    return;
-  }
-
-  section.classList.remove('hidden');
-  container.innerHTML = roomMembers
-    .map((member) => `
-      <button type="button" class="pill-choice" data-name="${escapeHtml(member.name)}" data-role="${escapeHtml(member.role)}">
-        ${escapeHtml(member.name)}
-      </button>
-    `)
-    .join("");
-
-  container.querySelectorAll(".pill-choice").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      SoundFX.play('click');
-      container.querySelectorAll(".pill-choice").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      document.getElementById("input-name").value = btn.dataset.name;
-      document.getElementById("input-role").value = btn.dataset.role;
-    });
-  });
-}
-
-function renderBoard() {
-  const list = document.getElementById("pulse-list");
-  const boardCount = document.getElementById("board-count");
-
-  let filteredPulses = pulses;
-  if (currentFilter === 'needs') {
-    filteredPulses = pulses.filter(p => Number(p.level) <= 2);
-  } else if (currentFilter === 'doing-well') {
-    filteredPulses = pulses.filter(p => Number(p.level) >= 4);
-  }
-
-  boardCount.textContent = `${pulses.length} today`;
-
-  if (filteredPulses.length === 0) {
-    if (pulses.length === 0) {
-      list.innerHTML = `
-        <div style="text-align: center; padding: 3rem 1.5rem;">
-          <div style="font-size: 3rem; margin-bottom: 1rem;">${renderBrandOctopusSvg(3, 'w-20 h-20')}</div>
-          <h3 style="color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.1rem;">No check-ins yet today</h3>
-          <p style="color: var(--text-muted); font-size: 0.88rem; max-width: 320px; margin: 0 auto;">
-            Be the first in <strong>${currentRoom}</strong> to share your honest vibe.
-          </p>
-        </div>
-      `;
-    } else {
-      list.innerHTML = `<p style="color:var(--text-muted);font-size:0.88rem;text-align:center;padding:2rem 1rem;">No check-ins matching this filter.</p>`;
-    }
-    return;
-  }
-
-  const sorted = [...filteredPulses].sort((a, b) => a.level - b.level);
-
-  list.innerHTML = sorted
-    .map((p) => {
-      const cfg = VIBE_CONFIG[p.level] || VIBE_CONFIG[3];
-      const needsCare = Number(p.level) <= 2;
-      const tagsHtml = (p.tags || [])
-        .map((t) => `<span class="mini-tag">${escapeHtml(t)}</span>`)
-        .join("");
-      return `
-        <div class="pulse-item ${needsCare ? "needs-care" : ""}" data-level="${p.level}">
-          <div class="pulse-left">
-            <div class="pulse-avatar">${renderBrandOctopusSvg(p.level, 'w-12 h-12')}</div>
-            <div class="pulse-meta">
-              <h3>
-                ${escapeHtml(p.name)}
-                <span class="role-tag">${escapeHtml(p.role || "Peer")}</span>
-                <span class="role-tag" style="color:${cfg.dark};background:rgba(${hexToRgb(cfg.color)}, 0.15);border:1px solid ${cfg.color};">
-                  ${p.level}/5 · ${cfg.label}
-                </span>
-              </h3>
-              ${p.note ? `<p class="pulse-note">"${escapeHtml(p.note)}"</p>` : ""}
-              ${tagsHtml ? `<div class="pulse-tags">${tagsHtml}</div>` : ""}
-              <div class="pulse-time">Updated ${timeAgo(p.updatedAt)}</div>
-            </div>
-          </div>
-          <button
-            type="button"
-            class="btn-kumusta ${needsCare ? "" : "gentle"}"
-            onclick="openReachOut('${escapeHtml(p.name).replace(/'/g, "\\'")}', ${p.level}, '${escapeHtml(p.note || "").replace(/'/g, "\\'")}')"
-          >
-            ${needsCare ? "Kumusta" : "Send Support"}
-          </button>
-        </div>
-      `;
-    })
-    .join("");
-}
-
-function updatePriorityBanner() {
-  const banner = document.getElementById("priority-banner");
-  const priorityCount = document.getElementById("priority-count");
-  const priorityText = document.getElementById("priority-text");
-
-  const struggling = pulses.filter((p) => Number(p.level) <= 2);
-  if (struggling.length > 0) {
-    banner.classList.remove("hidden");
-    priorityCount.textContent = `${struggling.length} ${struggling.length === 1 ? 'peer needs' : 'peers need'} support`;
-    priorityText.textContent = `Practice pakikipagkapwa-tao: reach out without unsolicited advice.`;
-  } else {
-    banner.classList.add("hidden");
-  }
-}
-
-function updateBoardBadge() {
-  const badge = document.getElementById('board-badge');
-  const alert = document.getElementById('board-alert');
-  
-  if (pulses.length > 0) {
-    badge.textContent = pulses.length;
-    badge.classList.remove('hidden');
-  } else {
-    badge.classList.add('hidden');
-  }
-  
-  const hasStrugglingPeers = pulses.some(p => Number(p.level) <= 2);
-  if (hasStrugglingPeers) {
-    alert.classList.remove('hidden');
-  } else {
-    alert.classList.add('hidden');
-  }
-}
-
-function updateVibeLabel(level) {
-  const cfg = VIBE_CONFIG[level];
-  document.getElementById("vibe-level-num").textContent = level;
-  document.getElementById("vibe-level-name").textContent = cfg.label;
-  document.getElementById("vibe-level-hint").textContent = cfg.hint;
-  
-  // Update central mascot
-  document.getElementById("central-mascot").innerHTML = renderBrandOctopusSvg(level, 'w-full h-full');
-}
-
-// ========== View Switching ==========
-function switchView(viewName) {
-  SoundFX.play('click');
-  currentView = viewName;
-  
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => {
-    t.classList.remove('active');
-    t.setAttribute('aria-selected', 'false');
-  });
-  
-  document.getElementById(`view-${viewName}`).classList.add('active');
-  const tab = document.getElementById(`tab-${viewName}`);
-  tab.classList.add('active');
-  tab.setAttribute('aria-selected', 'true');
-}
-
-// ========== Modal Handlers ==========
-window.openReachOut = function (name, level, note) {
-  SoundFX.play('click');
-  const modal = document.getElementById("reachout-modal");
-  const cfg = VIBE_CONFIG[level];
-  
-  document.getElementById("modal-peer-title").textContent = `Kumusta si ${name}`;
-  document.getElementById("modal-peer-level").textContent = `Level ${level} · ${cfg.label} / ${cfg.sublabel}`;
-  document.getElementById("modal-peer-context").textContent = note
-    ? `"${note}"`
-    : `${name} checked in at ${level}/5 but didn't leave a note.`;
-
-  currentIcebreakerIndex = 0;
-  renderIcebreakers(name);
-  modal.classList.remove("hidden");
-};
-
-function renderIcebreakers(name) {
-  const messages = [
-    [
-      `Hey ${name}, saw your vibecheck today. No pressure to reply fast—nandito lang ako if you want someone to listen.`,
-      `Kumusta ${name}? Free ka ba for a quick 5-min call or tambay later? Kwentuhan lang, no acads talk.`,
-      `Thinking of you today, ${name}. Let me know if you need company or pahinga lang.`,
-    ],
-    [
-      `${name}, I noticed you're going through something. Want to grab coffee or just sit together?`,
-      `No need to explain everything, ${name}. Just checking in—are you okay?`,
-      `${name}, you don't have to be "Okay lang" with me. What's really on your mind?`,
-    ],
-    [
-      `Sending good vibes your way, ${name}! Laban lang, one day at a time.`,
-      `${name}, remember you're not alone in this. We're all here for you.`,
-      `Proud of you for showing up today, ${name}. That takes courage.`,
-    ],
-  ];
-
-  const selectedSet = messages[currentIcebreakerIndex % messages.length];
-  const box = document.getElementById("icebreaker-list");
-  box.innerHTML = selectedSet
-    .map(
-      (msg) => `
-      <button type="button" class="icebreaker-btn" onclick="selectIcebreaker('${escapeHtml(msg).replace(/'/g, "\\'")}')">
-        ${msg}
-      </button>
-    `,
-    )
-    .join("");
-}
-
-window.selectIcebreaker = function(text) {
-  SoundFX.play('click');
-  document.querySelectorAll('.icebreaker-btn').forEach(btn => {
-    btn.style.borderColor = btn.textContent.includes(text.substring(0, 20)) ? 'var(--coral-primary)' : 'var(--border-color)';
-  });
-  document.getElementById('btn-copy-message').dataset.message = text;
-};
-
-// ========== Event Handlers ==========
-function showToast(message) {
-  const toast = document.getElementById("toast");
-  document.getElementById("toast-message").textContent = message;
-  toast.classList.remove("hidden");
-  setTimeout(() => toast.classList.add("hidden"), 2500);
-}
-
-function resetForm() {
-  document.getElementById("input-name").value = "";
-  document.getElementById("input-note").value = "";
-  document.getElementById("note-counter").textContent = "0/110";
-  selectedTags.clear();
-  document.querySelectorAll(".pill-choice").forEach((b) => b.classList.remove("active"));
-  document.querySelectorAll(".tag-chip").forEach((c) => c.classList.remove("active"));
-  selectedLevel = 3;
-  RadialDial.setLevel(3, false);
-}
-
-function cyclePrompt() {
-  SoundFX.play('click');
-  promptIndex = (promptIndex + 1) % PROMPTS.length;
-  document.getElementById("daily-prompt").textContent = PROMPTS[promptIndex];
-}
-
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function hexToRgb(hex) {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result
-    ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`
-    : "0, 0, 0";
-}
-
-// ========== Chaotic Loading Screen ==========
+// ========== Chaotic Loading Screen Physics ==========
 function initChaoticLoadingScreen() {
   const loadingScreen = document.getElementById('loading-screen');
   const octopus = document.getElementById('loadingOctopus');
@@ -791,6 +119,7 @@ function initChaoticLoadingScreen() {
   
   if (!octopus) return;
 
+  // Progress animation
   let progress = 0;
   const progressInterval = setInterval(() => {
     progress += Math.random() * 3 + 1;
@@ -803,6 +132,7 @@ function initChaoticLoadingScreen() {
     }
   }, 100);
 
+  // SUPER BOUNCY physics parameters
   let x = window.innerWidth / 2;
   let y = window.innerHeight / 2;
   let velocityX = (Math.random() - 0.5) * 25;
@@ -811,7 +141,7 @@ function initChaoticLoadingScreen() {
   let rotationSpeed = (Math.random() - 0.5) * 15;
   
   const gravity = 0.8;
-  const bounce = 1.15;
+  const bounce = 1.15; // Gain energy on bounce
   const friction = 0.995;
   const chaosWobble = 0.08;
   const maxSpeed = 30;
@@ -820,8 +150,10 @@ function initChaoticLoadingScreen() {
     velocityX += (Math.random() - 0.5) * chaosWobble * 20;
     velocityY += (Math.random() - 0.5) * chaosWobble * 20;
     velocityY += gravity;
+    
     x += velocityX;
     y += velocityY;
+    
     velocityX *= friction;
     velocityY *= friction;
     
@@ -879,64 +211,536 @@ function initChaoticLoadingScreen() {
   }, 5000);
 }
 
+// ========== Configuration ==========
+const PROMPTS = [
+  "Kumusta ka today?",
+  "What's weighing on you right now?",
+  "Beyond 'okay lang' — how are you really?"
+];
+
+// ========== State ==========
+let promptIndex = 0;
+let selectedLevel = 3;
+let selectedTags = new Set();
+let pulses = [];
+let roomMembers = [];
+let currentRoom = 'general';
+let userProfile = null;
+let currentFilter = 'all';
+let currentIcebreakerIndex = 0;
+
+// ========== Room Management ==========
+function getRoomFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  const room = params.get('room');
+  return room ? room.toLowerCase().replace(/[^a-z0-9-]/g, '').substring(0, 50) : 'general';
+}
+
+function setRoomInURL(roomId) {
+  const url = new URL(window.location);
+  url.searchParams.set('room', roomId);
+  window.history.pushState({}, '', url);
+}
+
+function getUserProfile() {
+  const saved = localStorage.getItem('vibecheck_profile');
+  return saved ? JSON.parse(saved) : null;
+}
+
+function saveUserProfile(name, role) {
+  const profile = { name, role, savedAt: new Date().toISOString() };
+  localStorage.setItem('vibecheck_profile', JSON.stringify(profile));
+  return profile;
+}
+
+async function switchRoom(newRoomId) {
+  if (!newRoomId) return;
+  
+  currentRoom = newRoomId.toLowerCase().replace(/[^a-z0-9-]/g, '').substring(0, 50) || 'general';
+  setRoomInURL(currentRoom);
+  document.getElementById('topnav-room-code').textContent = currentRoom;
+  
+  await loadPulses();
+  renderMemberPills();
+}
+
+async function joinRoom(name, role) {
+  try {
+    const res = await fetch("/api/pulses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        action: 'join',
+        room: currentRoom,
+        name,
+        role 
+      }),
+    });
+    const data = await res.json();
+    if (res.ok && data.members) {
+      roomMembers = data.members;
+      renderMemberPills();
+    }
+  } catch (err) {
+    console.error('Failed to join room:', err);
+  }
+}
+
+// ========== Unified Brand Octopus System ==========
+const OCTO_MOOD_THEMES = {
+  1: {
+    bodyMain: '#F44336',
+    bodyDark: '#D32F2F',
+    bodyLight: '#FF7961',
+    rimColor: '#B0BEC5',
+    brows: `<path d="M92,102 L122,113" stroke="#111111" stroke-width="5.5" stroke-linecap="round"/><path d="M188,101 L162,113" stroke="#111111" stroke-width="5.5" stroke-linecap="round"/>`,
+    eyes: `<ellipse cx="108" cy="121" rx="11" ry="13.5" fill="#111111"/><circle cx="112" cy="115" r="3.8" fill="#FFFFFF"/><ellipse cx="174" cy="120" rx="10" ry="13" fill="#111111"/><circle cx="177" cy="114" r="3.5" fill="#FFFFFF"/>`,
+    mouth: `<path d="M136,144 C138,133 149,133 151,144" fill="none" stroke="#111111" stroke-width="4.5" stroke-linecap="round"/>`,
+    cheeks: ''
+  },
+  2: {
+    bodyMain: '#FB8C00',
+    bodyDark: '#E65100',
+    bodyLight: '#FFB74D',
+    rimColor: '#CFD8DC',
+    brows: `<path d="M93,109 L121,102" stroke="#111111" stroke-width="5" stroke-linecap="round"/><path d="M187,108 L163,102" stroke="#111111" stroke-width="5" stroke-linecap="round"/>`,
+    eyes: `<ellipse cx="108" cy="121" rx="11" ry="13" fill="#111111"/><circle cx="112" cy="115" r="3.8" fill="#FFFFFF"/><ellipse cx="174" cy="120" rx="10" ry="12.5" fill="#111111"/><circle cx="177" cy="114" r="3.5" fill="#FFFFFF"/>`,
+    mouth: `<path d="M135,143 Q143.5,136 152,143" fill="none" stroke="#111111" stroke-width="4.5" stroke-linecap="round"/>`,
+    cheeks: ''
+  },
+  3: {
+    bodyMain: '#FBC02D',
+    bodyDark: '#F57F17',
+    bodyLight: '#FFF176',
+    rimColor: '#CFD8DC',
+    brows: `<path d="M95,104 Q108,102 120,104" fill="none" stroke="#111111" stroke-width="4.8" stroke-linecap="round"/><path d="M164,104 Q175,102 186,104" fill="none" stroke="#111111" stroke-width="4.8" stroke-linecap="round"/>`,
+    eyes: `<ellipse cx="108" cy="121" rx="11" ry="13" fill="#111111"/><circle cx="112" cy="115" r="3.8" fill="#FFFFFF"/><ellipse cx="174" cy="120" rx="10" ry="12.5" fill="#111111"/><circle cx="177" cy="114" r="3.5" fill="#FFFFFF"/>`,
+    mouth: `<line x1="136" y1="140" x2="152" y2="140" stroke="#111111" stroke-width="4.5" stroke-linecap="round"/>`,
+    cheeks: `<ellipse cx="90" cy="134" rx="8" ry="4.5" fill="#F43F5E" opacity="0.22"/><ellipse cx="189" cy="132" rx="7.5" ry="4.2" fill="#F43F5E" opacity="0.22"/>`
+  },
+  4: {
+    bodyMain: '#2EBD59',
+    bodyDark: '#1B8A3D',
+    bodyLight: '#69F0AE',
+    rimColor: '#CFD8DC',
+    brows: `<path d="M95,102 Q108,97 120,102" fill="none" stroke="#111111" stroke-width="4.8" stroke-linecap="round"/><path d="M164,102 Q175,97 186,102" fill="none" stroke="#111111" stroke-width="4.8" stroke-linecap="round"/>`,
+    eyes: `<ellipse cx="108" cy="121" rx="11" ry="13" fill="#111111"/><circle cx="112" cy="115" r="3.8" fill="#FFFFFF"/><ellipse cx="174" cy="120" rx="10" ry="12.5" fill="#111111"/><circle cx="177" cy="114" r="3.5" fill="#FFFFFF"/>`,
+    mouth: `<path d="M134,137 Q143.5,147 153,137" fill="none" stroke="#111111" stroke-width="4.5" stroke-linecap="round"/>`,
+    cheeks: `<ellipse cx="90" cy="134" rx="8.5" ry="4.8" fill="#F43F5E" opacity="0.35"/><ellipse cx="189" cy="132" rx="8" ry="4.5" fill="#F43F5E" opacity="0.35"/>`
+  },
+  5: {
+    bodyMain: '#14B8A6',
+    bodyDark: '#0F766E',
+    bodyLight: '#5EEAD4',
+    rimColor: '#CFD8DC',
+    brows: `<path d="M94,99 Q108,93 120,99" fill="none" stroke="#111111" stroke-width="4.8" stroke-linecap="round"/><path d="M164,99 Q175,93 186,99" fill="none" stroke="#111111" stroke-width="4.8" stroke-linecap="round"/>`,
+    eyes: `<ellipse cx="108" cy="120" rx="11.5" ry="13.5" fill="#111111"/><circle cx="112" cy="114" r="4" fill="#FFFFFF"/><ellipse cx="174" cy="119" rx="10.5" ry="13" fill="#111111"/><circle cx="177" cy="113" r="3.8" fill="#FFFFFF"/>`,
+    mouth: `<path d="M132,135 Q143.5,152 155,135 Z" fill="#111111" stroke="#111111" stroke-width="2.5" stroke-linejoin="round"/><path d="M137,142 Q143.5,148 150,142" fill="#FF6B8B"/>`,
+    cheeks: `<ellipse cx="90" cy="134" rx="9.5" ry="5.2" fill="#F43F5E" opacity="0.5"/><ellipse cx="189" cy="132" rx="9" ry="5" fill="#F43F5E" opacity="0.5"/>`
+  }
+};
+
+function renderBrandOctopusSvg(level = 3, sizeClass = 'w-28 h-24') {
+  const t = OCTO_MOOD_THEMES[level] || OCTO_MOOD_THEMES[3];
+  const uid = `octo-${level}-${Math.random().toString(36).slice(2, 6)}`;
+
+  return `
+    <svg viewBox="0 0 260 220" class="${sizeClass}" aria-label="vibecheck mascot level ${level}">
+      <defs>
+        <radialGradient id="${uid}-dome" cx="38%" cy="28%" r="70%">
+          <stop offset="0%" stop-color="${t.bodyLight}" />
+          <stop offset="45%" stop-color="${t.bodyMain}" />
+          <stop offset="100%" stop-color="${t.bodyDark}" />
+        </radialGradient>
+      </defs>
+      <path d="M52,142 C18,144 10,162 24,171 C38,179 62,171 76,161 Z" fill="${t.bodyDark}"/>
+      <path d="M16,163 C22,173 46,174 68,163 L64,157 C45,166 25,165 18,158 Z" fill="${t.rimColor}"/>
+      <path d="M196,138 C232,140 246,156 232,167 C218,177 192,169 178,158 Z" fill="${t.bodyDark}"/>
+      <path d="M238,159 C232,169 208,171 186,160 L190,154 C209,163 229,162 236,154 Z" fill="${t.rimColor}"/>
+      <path d="M46,144 C44,72 82,34 134,34 C186,34 212,74 208,140 C206,156 174,164 132,164 C86,164 48,158 46,144 Z" fill="url(#${uid}-dome)"/>
+      <path d="M56,134 C54,82 80,48 122,44" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" opacity="0.28"/>
+      <path d="M134,47 C138,44 146,46 146,51 C146,56 136,58 129,55 C121,52 122,43 133,41 C145,39 156,45 154,53" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.45"/>
+      <path d="M74,152 C52,168 58,187 78,186 C95,185 104,171 108,159 Z" fill="${t.bodyMain}"/>
+      <path d="M58,176 C64,187 86,188 102,174 L97,169 C84,180 67,180 61,171 Z" fill="${t.rimColor}"/>
+      <path d="M168,151 C192,166 196,184 176,185 C158,186 146,172 142,159 Z" fill="${t.bodyMain}"/>
+      <path d="M192,175 C186,186 164,187 148,173 L153,168 C166,179 183,179 189,170 Z" fill="${t.rimColor}"/>
+      <path d="M107,158 C96,181 106,199 127,199 C148,199 156,181 144,158 Z" fill="${t.bodyMain}"/>
+      <path d="M101,185 C108,199 144,199 151,185 L145,181 C139,192 113,192 107,181 Z" fill="${t.rimColor}"/>
+      ${t.cheeks}
+      ${t.eyes}
+      ${t.brows}
+      ${t.mouth}
+    </svg>
+  `;
+}
+
+const VIBE_CONFIG = {
+  1: { label: "Heavy", color: "#F44336" },
+  2: { label: "Drained", color: "#FB8C00" },
+  3: { label: "Steady", color: "#FBC02D" },
+  4: { label: "Good", color: "#2EBD59" },
+  5: { label: "Great", color: "#14B8A6" }
+};
+
+// ========== API Integration ==========
+async function loadPulses() {
+  const syncBadge = document.getElementById("sync-status");
+  try {
+    const res = await fetch(`/api/pulses?room=${currentRoom}`);
+    const data = await res.json();
+    if (res.ok && data.room) {
+      pulses = data.pulses || [];
+      roomMembers = data.members || [];
+      localStorage.setItem(`vibecheck_backup_${currentRoom}`, JSON.stringify(pulses));
+      syncBadge.innerHTML = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polyline points="20 6 9 17 4 12"/></svg> Live`;
+      syncBadge.classList.add("live");
+    } else {
+      throw new Error("Fallback to local");
+    }
+  } catch {
+    pulses = JSON.parse(localStorage.getItem(`vibecheck_backup_${currentRoom}`) || "[]");
+    roomMembers = [];
+    syncBadge.innerHTML = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Local`;
+    syncBadge.classList.remove("live");
+  }
+  renderBoard();
+  updatePriorityNotice();
+  renderMemberPills();
+  updateBoardBadge();
+}
+
+async function savePulse(payload) {
+  const btn = document.getElementById("btn-submit");
+  const originalHTML = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<svg class="icon icon-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Posting...';
+
+  try {
+    const res = await fetch("/api/pulses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...payload, room: currentRoom }),
+    });
+    const data = await res.json();
+    if (res.ok && data.pulses) {
+      pulses = data.pulses;
+      localStorage.setItem(`vibecheck_backup_${currentRoom}`, JSON.stringify(pulses));
+    } else {
+      throw new Error("API unavailable");
+    }
+  } catch {
+    const localEntry = {
+      ...payload,
+      id: Date.now().toString(),
+      updatedAt: new Date().toISOString(),
+    };
+    pulses = [
+      localEntry,
+      ...pulses.filter((p) => p.name.toLowerCase() !== payload.name.toLowerCase()),
+    ];
+    localStorage.setItem(`vibecheck_backup_${currentRoom}`, JSON.stringify(pulses));
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polyline points="20 6 9 17 4 12"/></svg> Posted!';
+    SoundFX.play('submit');
+    showToast("Check-in posted");
+    setTimeout(() => (btn.innerHTML = originalHTML), 2000);
+    await loadPulses();
+    resetForm();
+  }
+}
+
+// ========== UI Rendering ==========
+function timeAgo(iso) {
+  const diffMins = Math.max(1, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const hrs = Math.floor(diffMins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+function renderMemberPills() {
+  const container = document.getElementById("member-pills");
+  if (!container) return;
+
+  if (roomMembers.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML = roomMembers
+    .map((member) => `
+      <button type="button" class="member-pill" data-name="${escapeHtml(member.name)}" data-role="${escapeHtml(member.role)}">
+        ${escapeHtml(member.name)}
+      </button>
+    `)
+    .join("");
+
+  container.querySelectorAll(".member-pill").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      SoundFX.play('tap');
+      container.querySelectorAll(".member-pill").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("input-name").value = btn.dataset.name;
+      document.getElementById("input-role").value = btn.dataset.role;
+    });
+  });
+}
+
+function renderBoard() {
+  const list = document.getElementById("pulse-list");
+  const boardCount = document.getElementById("board-count");
+
+  let filteredPulses = pulses;
+  if (currentFilter === 'needs') {
+    filteredPulses = pulses.filter(p => Number(p.level) <= 2);
+  } else if (currentFilter === 'doing-well') {
+    filteredPulses = pulses.filter(p => Number(p.level) >= 3);
+  }
+
+  boardCount.textContent = `${pulses.length} today`;
+
+  if (filteredPulses.length === 0) {
+    if (pulses.length === 0) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">🐙</div>
+          <h3>No check-ins yet</h3>
+          <p>Be the first in <strong>${currentRoom}</strong> to share your honest vibe</p>
+        </div>
+      `;
+    } else {
+      list.innerHTML = `<div class="empty-state"><p>No check-ins matching this filter</p></div>`;
+    }
+    return;
+  }
+
+  const sorted = [...filteredPulses].sort((a, b) => a.level - b.level);
+
+  list.innerHTML = sorted
+    .map((p) => {
+      const cfg = VIBE_CONFIG[p.level] || VIBE_CONFIG[3];
+      const needsSupport = Number(p.level) <= 2;
+      const tagsHtml = (p.tags || [])
+        .map((t) => `<span class="pulse-tag">${escapeHtml(t)}</span>`)
+        .join("");
+      return `
+        <div class="pulse-card ${needsSupport ? "needs-support" : ""}" data-level="${p.level}">
+          <div class="pulse-header">
+            <div class="pulse-identity">
+              <div class="pulse-name">${escapeHtml(p.name)}</div>
+              <div class="pulse-meta">
+                <span class="pulse-role">${escapeHtml(p.role || "Peer")}</span>
+                <span class="pulse-level" data-level="${p.level}">${p.level} — ${cfg.label}</span>
+                <span class="pulse-time">${timeAgo(p.updatedAt)}</span>
+              </div>
+            </div>
+            <button type="button" class="pulse-action" onclick="openReachOut('${escapeHtml(p.name).replace(/'/g, "\\'")}', ${p.level}, '${escapeHtml(p.note || "").replace(/'/g, "\\'")}', '${escapeHtml(p.role || "Peer").replace(/'/g, "\\'")}')">
+              Reach Out
+            </button>
+          </div>
+          ${p.note ? `<p class="pulse-note">"${escapeHtml(p.note)}"</p>` : ""}
+          ${tagsHtml ? `<div class="pulse-tags">${tagsHtml}</div>` : ""}
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function updatePriorityNotice() {
+  const notice = document.getElementById("priority-notice");
+  const priorityCount = document.getElementById("priority-count");
+
+  const struggling = pulses.filter((p) => Number(p.level) <= 2);
+  if (struggling.length > 0) {
+    notice.classList.remove("hidden");
+    priorityCount.textContent = `${struggling.length} ${struggling.length === 1 ? 'peer needs' : 'peers need'} support`;
+  } else {
+    notice.classList.add("hidden");
+  }
+}
+
+function updateBoardBadge() {
+  const badge = document.getElementById("board-badge");
+  const needsSupport = pulses.filter((p) => Number(p.level) <= 2).length;
+  
+  if (needsSupport > 0) {
+    badge.textContent = needsSupport;
+    badge.classList.remove("hidden");
+  } else {
+    badge.classList.add("hidden");
+  }
+}
+
+function updateMascotDisplay(level) {
+  const cfg = VIBE_CONFIG[level];
+  document.getElementById("main-mascot").innerHTML = renderBrandOctopusSvg(level);
+  document.getElementById("mascot-level").textContent = `Level ${level} — ${cfg.label}`;
+}
+
+// ========== Modal Handlers ==========
+window.openReachOut = function (name, level, note, role) {
+  SoundFX.play('tap');
+  const modal = document.getElementById("reachout-modal");
+  const cfg = VIBE_CONFIG[level];
+  
+  document.getElementById("modal-peer-title").textContent = `Reach Out to ${name}`;
+  document.getElementById("modal-peer-level").textContent = `Level ${level} — ${cfg.label}`;
+  document.getElementById("modal-peer-context").textContent = note || `${name} checked in at ${level}/5 but didn't leave a note.`;
+
+  currentIcebreakerIndex = 0;
+  renderIcebreakers(name);
+  modal.classList.remove("hidden");
+};
+
+function renderIcebreakers(name) {
+  const messages = [
+    [
+      `Hey ${name}, saw your check-in today. No pressure to reply fast—I'm here if you want someone to listen.`,
+      `Kumusta ${name}? Free for a quick call or coffee later? Just to check in, no pressure.`,
+      `Thinking of you today, ${name}. Let me know if you need company or just want to talk.`,
+    ],
+    [
+      `${name}, I noticed you're going through something. Want to grab coffee or just sit together?`,
+      `No need to explain everything, ${name}. Just checking in—are you okay?`,
+      `${name}, you don't have to be "okay lang" with me. What's really on your mind?`,
+    ],
+    [
+      `Sending good vibes your way, ${name}. One day at a time, we're all in this together.`,
+      `${name}, remember you're not alone in this. We're all here for you.`,
+      `Proud of you for showing up today, ${name}. That takes real courage.`,
+    ],
+  ];
+
+  const selectedSet = messages[currentIcebreakerIndex % messages.length];
+  const box = document.getElementById("icebreaker-list");
+  box.innerHTML = selectedSet
+    .map((msg) => `
+      <button type="button" class="icebreaker-btn" onclick="selectIcebreaker(this, '${escapeHtml(msg).replace(/'/g, "\\'")}')">
+        ${msg}
+      </button>
+    `)
+    .join("");
+}
+
+window.selectIcebreaker = function(btn, text) {
+  SoundFX.play('tap');
+  document.querySelectorAll('.icebreaker-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('btn-copy-message').dataset.message = text;
+};
+
+// ========== Event Handlers ==========
+function showToast(message) {
+  const toast = document.getElementById("toast-notification");
+  document.getElementById("toast-message").textContent = message;
+  toast.classList.remove("hidden");
+  setTimeout(() => toast.classList.add("hidden"), 2500);
+}
+
+function resetForm() {
+  selectedTags.clear();
+  document.getElementById("input-note").value = "";
+  document.getElementById("note-counter").textContent = "0/110";
+  document.querySelectorAll(".member-pill").forEach((b) => b.classList.remove("active"));
+  document.querySelectorAll(".tag-pill").forEach((c) => c.classList.remove("active"));
+  selectedLevel = 3;
+  updateVibeSelection(3);
+}
+
+function updateVibeSelection(level) {
+  selectedLevel = level;
+  document.querySelectorAll(".vibe-btn").forEach((b) => b.classList.remove("active"));
+  document.querySelector(`.vibe-btn[data-level="${level}"]`).classList.add("active");
+  updateMascotDisplay(level);
+  SoundFX.play(`vibe${level}`);
+}
+
+function cyclePrompt() {
+  SoundFX.play('tap');
+  promptIndex = (promptIndex + 1) % PROMPTS.length;
+  document.getElementById("daily-prompt").textContent = PROMPTS[promptIndex];
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ========== Tab Navigation ==========
+function switchTab(tabName) {
+  SoundFX.play('tap');
+  
+  // Update tab buttons
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    const isActive = btn.dataset.tab === tabName;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-selected', isActive);
+  });
+  
+  // Update tab content
+  document.querySelectorAll('.tab-content').forEach(content => {
+    content.classList.toggle('active', content.id === `tab-${tabName}`);
+  });
+}
+
 // ========== Initialization ==========
 document.addEventListener("DOMContentLoaded", () => {
-  // Initialize sound
+  // Initialize sound engine
   SoundFX.init();
   
   // Initialize room from URL
   currentRoom = getRoomFromURL();
-  document.getElementById('room-label').textContent = currentRoom;
-  document.getElementById('current-room-code').textContent = currentRoom;
+  document.getElementById('topnav-room-code').textContent = currentRoom;
   
   // Load user profile
   userProfile = getUserProfile();
   if (userProfile) {
     document.getElementById("input-name").value = userProfile.name;
     document.getElementById("input-role").value = userProfile.role;
-    document.getElementById("profile-name").value = userProfile.name;
-    document.getElementById("profile-role").value = userProfile.role;
+    
+    // Show saved profile chip
+    const savedProfileDisplay = document.getElementById("saved-profile-display");
+    if (savedProfileDisplay) {
+      savedProfileDisplay.querySelector('.profile-name').textContent = userProfile.name;
+      savedProfileDisplay.querySelector('.profile-role').textContent = userProfile.role;
+      savedProfileDisplay.classList.remove('hidden');
+      document.getElementById('identity-inputs').style.display = 'none';
+      document.getElementById('btn-edit-profile').classList.remove('hidden');
+    }
   }
   
   // Start chaotic loading screen
   initChaoticLoadingScreen();
   
-  // Initialize radial dial
-  RadialDial.init();
-  
-  // Render header mascot
-  document.getElementById("header-mascot").innerHTML = renderBrandOctopusSvg(1, 'w-8 h-8');
+  // Render initial mascots
+  document.getElementById("header-mascot").innerHTML = renderBrandOctopusSvg(1, 'w-8 h-7');
+  document.getElementById("main-mascot").innerHTML = renderBrandOctopusSvg(selectedLevel);
 
   // Tab navigation
-  document.querySelectorAll('.nav-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      switchView(tab.dataset.view);
-    });
+  document.querySelectorAll(".tab-btn").forEach((btn) => {
+    btn.addEventListener("click", () => switchTab(btn.dataset.tab));
   });
 
   // Sound toggle
-  document.getElementById('btn-sound-toggle').addEventListener('click', () => {
+  document.getElementById("btn-sound-toggle").addEventListener("click", () => {
     SoundFX.toggle();
   });
 
-  // Room menu
-  document.getElementById("btn-room-menu").addEventListener("click", () => {
-    SoundFX.play('click');
+  // Room actions
+  document.getElementById("btn-room-info").addEventListener("click", () => {
+    SoundFX.play('tap');
     document.getElementById("room-modal").classList.remove("hidden");
   });
 
   document.getElementById("close-room-modal").addEventListener("click", () => {
+    SoundFX.play('tap');
     document.getElementById("room-modal").classList.add("hidden");
   });
 
-  document.getElementById("btn-copy-invite").addEventListener("click", () => {
-    SoundFX.play('click');
-    const inviteLink = `${window.location.origin}/?room=${currentRoom}`;
-    navigator.clipboard.writeText(inviteLink);
-    showToast("Invite link copied to clipboard");
-  });
-
   document.getElementById("btn-join-room").addEventListener("click", async () => {
+    SoundFX.play('tap');
     const roomInput = document.getElementById("input-room-code");
     const newRoom = roomInput.value.trim();
     if (newRoom) {
@@ -953,46 +757,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Profile menu
-  document.getElementById("btn-profile-menu").addEventListener("click", () => {
-    SoundFX.play('click');
-    document.getElementById("profile-modal").classList.remove("hidden");
-  });
-
-  document.getElementById("close-profile-modal").addEventListener("click", () => {
-    document.getElementById("profile-modal").classList.add("hidden");
-  });
-
-  document.getElementById("btn-save-profile").addEventListener("click", () => {
-    SoundFX.play('click');
-    const name = document.getElementById("profile-name").value.trim();
-    const role = document.getElementById("profile-role").value.trim();
-    if (name) {
-      userProfile = saveUserProfile(name, role || "Student");
-      document.getElementById("input-name").value = name;
-      document.getElementById("input-role").value = role || "Student";
-      document.getElementById("profile-modal").classList.add("hidden");
-      showToast("Profile saved");
-    }
-  });
-
-  // About modal
-  document.getElementById("btn-about").addEventListener("click", () => {
-    SoundFX.play('click');
-    document.getElementById("ethics-modal").classList.remove("hidden");
-  });
-
-  document.getElementById("close-ethics").addEventListener("click", () => {
-    document.getElementById("ethics-modal").classList.add("hidden");
+  document.getElementById("btn-copy-invite").addEventListener("click", () => {
+    SoundFX.play('tap');
+    const inviteLink = `${window.location.origin}/?room=${currentRoom}`;
+    navigator.clipboard.writeText(inviteLink);
+    showToast("Invite link copied!");
   });
 
   // Prompt cycling
   document.getElementById("btn-cycle-prompt").addEventListener("click", cyclePrompt);
 
+  // Vibe level buttons
+  document.querySelectorAll(".vibe-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      updateVibeSelection(Number(btn.dataset.level));
+    });
+  });
+
   // Tag toggles
-  document.querySelectorAll(".tag-chip").forEach((chip) => {
+  document.querySelectorAll(".tag-pill").forEach((chip) => {
     chip.addEventListener("click", () => {
-      SoundFX.play('click');
+      SoundFX.play('tap');
       const tag = chip.dataset.tag;
       if (selectedTags.has(tag)) {
         selectedTags.delete(tag);
@@ -1010,15 +795,23 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("note-counter").textContent = `${count}/110`;
   });
 
-  // Filter pills
-  document.querySelectorAll(".filter-pill").forEach((pill) => {
-    pill.addEventListener("click", () => {
-      SoundFX.play('click');
-      currentFilter = pill.dataset.filter;
-      document.querySelectorAll(".filter-pill").forEach((p) => p.classList.remove("active"));
-      pill.classList.add("active");
+  // Filter tabs
+  document.querySelectorAll(".filter-tab").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      SoundFX.play('tap');
+      currentFilter = tab.dataset.filter;
+      document.querySelectorAll(".filter-tab").forEach((t) => t.classList.remove("active"));
+      tab.classList.add("active");
       renderBoard();
     });
+  });
+
+  // Profile edit toggle
+  document.getElementById("btn-edit-profile")?.addEventListener("click", () => {
+    SoundFX.play('tap');
+    document.getElementById("saved-profile-display").classList.add("hidden");
+    document.getElementById("identity-inputs").style.display = 'grid';
+    document.getElementById("btn-edit-profile").classList.add("hidden");
   });
 
   // Submit form
@@ -1027,18 +820,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const name = document.getElementById("input-name").value.trim();
     const role = document.getElementById("input-role").value.trim();
     const note = document.getElementById("input-note").value.trim();
+    
     if (!name) {
-      alert("Please enter your name!");
+      showToast("Please enter your name");
       return;
     }
 
+    // Save profile
     userProfile = saveUserProfile(name, role || "Student");
     
+    // Check if new member
     const isNewMember = !roomMembers.some(m => m.name.toLowerCase() === name.toLowerCase());
     if (isNewMember) {
       await joinRoom(name, role || "Student");
     }
 
+    // Save pulse
     savePulse({
       name,
       role: role || "Student",
@@ -1049,55 +846,60 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Board controls
+  // Modal handlers
   document.getElementById("btn-refresh").addEventListener("click", () => {
-    SoundFX.play('click');
+    SoundFX.play('tap');
     loadPulses();
   });
   
-  document.getElementById("btn-view-priority")?.addEventListener("click", () => {
-    SoundFX.play('click');
-    currentFilter = 'needs';
-    document.querySelectorAll(".filter-pill").forEach((p) => p.classList.remove("active"));
-    document.querySelector('.filter-pill[data-filter="needs"]').classList.add("active");
-    renderBoard();
-  });
-
-  // Reachout modal
   document.getElementById("close-reachout").addEventListener("click", () => {
+    SoundFX.play('tap');
     document.getElementById("reachout-modal").classList.add("hidden");
   });
+  
+  document.getElementById("btn-about").addEventListener("click", () => {
+    SoundFX.play('tap');
+    document.getElementById("ethics-modal").classList.remove("hidden");
+  });
+  
+  document.getElementById("close-ethics").addEventListener("click", () => {
+    SoundFX.play('tap');
+    document.getElementById("ethics-modal").classList.add("hidden");
+  });
 
+  // Icebreaker switching
   document.getElementById("btn-switch-icebreaker")?.addEventListener("click", () => {
-    SoundFX.play('click');
+    SoundFX.play('tap');
     currentIcebreakerIndex++;
-    const name = document.getElementById("modal-peer-title").textContent.replace("Kumusta si ", "");
+    const name = document.getElementById("modal-peer-title").textContent.replace("Reach Out to ", "");
     renderIcebreakers(name);
   });
 
+  // Copy message button
   document.getElementById("btn-copy-message")?.addEventListener("click", () => {
-    SoundFX.play('click');
+    SoundFX.play('submit');
     const message = document.getElementById("btn-copy-message").dataset.message || 
-      document.querySelector('.icebreaker-btn')?.textContent.trim() || '';
+      document.querySelector('.icebreaker-btn.selected')?.textContent.trim() || '';
     
     if (message) {
       navigator.clipboard.writeText(message);
       const btn = document.getElementById("btn-copy-message");
-      const originalHtml = btn.innerHTML;
-      btn.innerHTML = `<svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied`;
-      setTimeout(() => (btn.innerHTML = originalHtml), 2000);
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+      setTimeout(() => (btn.innerHTML = originalHTML), 2000);
     }
   });
 
+  // Log reach-out button
   document.getElementById("btn-log-kumustahan")?.addEventListener("click", () => {
-    SoundFX.play('success');
+    SoundFX.play('submit');
     const btn = document.getElementById("btn-log-kumustahan");
-    btn.innerHTML = 'Logged — keep being present';
+    btn.innerHTML = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polyline points="20 6 9 17 4 12"/></svg> Logged!';
     btn.disabled = true;
-    showToast("Kumustahan logged — practicing pakikipagkapwa-tao");
+    showToast("Outreach logged");
     setTimeout(() => {
       document.getElementById("reachout-modal").classList.add("hidden");
-      btn.innerHTML = 'Log Kumustahan';
+      btn.innerHTML = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polyline points="20 6 9 17 4 12"/></svg> Log Outreach';
       btn.disabled = false;
     }, 1500);
   });
@@ -1106,10 +908,14 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
     backdrop.addEventListener('click', (e) => {
       if (e.target === backdrop) {
+        SoundFX.play('tap');
         backdrop.classList.add('hidden');
       }
     });
   });
+
+  // Initialize default vibe selection
+  updateVibeSelection(3);
 
   // Load pulses
   loadPulses();
