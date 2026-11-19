@@ -750,9 +750,14 @@ function renderBoard() {
       const tagsHtml = (p.tags || [])
         .map((t) => `<span class="pulse-tag">${escapeHtml(t)}</span>`)
         .join("");
+      
+      // Render octopus avatar for this user's vibe level
+      const octopusAvatar = renderBrandOctopusSvg(p.level, 'w-10 h-9');
+      
       return `
         <div class="pulse-card ${needsSupport ? "needs-support" : ""}" data-level="${p.level}">
           <div class="pulse-header">
+            <div class="pulse-avatar">${octopusAvatar}</div>
             <div class="pulse-identity">
               <div class="pulse-name">${escapeHtml(p.name)}</div>
               <div class="pulse-meta">
@@ -895,36 +900,35 @@ function updateVibeSelection(level) {
   SoundFX.play(`vibe${level}`);
 }
 
-// ========== iOS-Style Vibe Picker ==========
+// ========== iOS-Style Vibe Picker with Smooth Momentum Scrolling ==========
 function initVibePicker() {
   const picker = document.getElementById('vibe-picker');
   if (!picker) return;
   
-  const itemHeight = 80; // Height of each picker item
+  const itemHeight = 80;
   const items = Array.from(picker.querySelectorAll('.vibe-picker-item'));
-  let currentIndex = 2; // Start at level 3 (index 2)
+  let currentOffset = -2 * itemHeight; // Start at level 3 (index 2)
   let startY = 0;
-  let currentY = 0;
+  let lastY = 0;
+  let velocityY = 0;
+  let lastTime = 0;
   let isDragging = false;
+  let animationFrame = null;
   let lastTickLevel = 3;
   
-  function updatePickerPosition(smooth = true) {
-    const offset = -currentIndex * itemHeight;
+  function getCurrentLevel() {
+    // Calculate current level based on offset
+    const index = Math.round(-currentOffset / itemHeight);
+    return Math.max(0, Math.min(items.length - 1, index));
+  }
+  
+  function updateActiveItem() {
+    const currentIndex = getCurrentLevel();
     
-    if (smooth) {
-      picker.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-    } else {
-      picker.style.transition = 'none';
-    }
-    
-    picker.style.transform = `translateY(${offset}px)`;
-    
-    // Update active item
     items.forEach((item, index) => {
       item.classList.toggle('active', index === currentIndex);
     });
     
-    // Update selected level (1-indexed)
     const newLevel = currentIndex + 1;
     
     // Play tick sound if level changed
@@ -937,11 +941,66 @@ function initVibePicker() {
     updateMascotDisplay(newLevel);
   }
   
+  function applyTransform() {
+    picker.style.transform = `translateY(${currentOffset}px)`;
+    updateActiveItem();
+  }
+  
+  function snapToNearest() {
+    picker.classList.add('snapping');
+    const targetIndex = getCurrentLevel();
+    currentOffset = -targetIndex * itemHeight;
+    applyTransform();
+    
+    // Play final vibe sound
+    setTimeout(() => {
+      SoundFX.play(`vibe${selectedLevel}`);
+      picker.classList.remove('snapping');
+    }, 150);
+  }
+  
+  function momentumScroll() {
+    if (isDragging) return;
+    
+    // Apply velocity with decay
+    currentOffset += velocityY;
+    velocityY *= 0.95; // Decay factor
+    
+    // Clamp to bounds
+    const minOffset = -(items.length - 1) * itemHeight;
+    const maxOffset = 0;
+    
+    if (currentOffset > maxOffset) {
+      currentOffset = maxOffset;
+      velocityY = 0;
+    } else if (currentOffset < minOffset) {
+      currentOffset = minOffset;
+      velocityY = 0;
+    }
+    
+    applyTransform();
+    
+    // Continue momentum or snap to nearest
+    if (Math.abs(velocityY) > 0.5) {
+      animationFrame = requestAnimationFrame(momentumScroll);
+    } else {
+      snapToNearest();
+    }
+  }
+  
   function handleStart(e) {
     isDragging = true;
-    picker.classList.add('dragging');
+    picker.classList.remove('snapping');
+    
+    if (animationFrame) {
+      cancelAnimationFrame(animationFrame);
+      animationFrame = null;
+    }
+    
     startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-    currentY = startY;
+    lastY = startY;
+    lastTime = Date.now();
+    velocityY = 0;
   }
   
   function handleMove(e) {
@@ -949,31 +1008,45 @@ function initVibePicker() {
     
     e.preventDefault();
     const y = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-    const deltaY = y - startY;
+    const deltaY = y - lastY;
+    const currentTime = Date.now();
+    const deltaTime = currentTime - lastTime;
     
-    // Calculate new index based on drag distance
-    const newIndex = Math.round(currentIndex - deltaY / itemHeight);
-    const clampedIndex = Math.max(0, Math.min(items.length - 1, newIndex));
-    
-    if (clampedIndex !== currentIndex) {
-      currentIndex = clampedIndex;
-      updatePickerPosition(false);
+    // Calculate velocity for momentum
+    if (deltaTime > 0) {
+      velocityY = deltaY / deltaTime * 16; // Normalize to 60fps
     }
     
-    currentY = y;
+    currentOffset += deltaY;
+    
+    // Soft bounds (allow slight overscroll)
+    const minOffset = -(items.length - 1) * itemHeight;
+    const maxOffset = 0;
+    const overscrollFactor = 0.3;
+    
+    if (currentOffset > maxOffset) {
+      currentOffset = maxOffset + (currentOffset - maxOffset) * overscrollFactor;
+    } else if (currentOffset < minOffset) {
+      currentOffset = minOffset + (currentOffset - minOffset) * overscrollFactor;
+    }
+    
+    applyTransform();
+    
+    lastY = y;
+    lastTime = currentTime;
   }
   
   function handleEnd() {
     if (!isDragging) return;
     
     isDragging = false;
-    picker.classList.remove('dragging');
     
-    // Snap to nearest item
-    updatePickerPosition(true);
-    
-    // Play vibe sound on release
-    SoundFX.play(`vibe${selectedLevel}`);
+    // Start momentum scrolling if velocity is significant
+    if (Math.abs(velocityY) > 1) {
+      animationFrame = requestAnimationFrame(momentumScroll);
+    } else {
+      snapToNearest();
+    }
   }
   
   // Mouse events
@@ -990,27 +1063,23 @@ function initVibePicker() {
   picker.parentElement.addEventListener('wheel', (e) => {
     e.preventDefault();
     
-    if (e.deltaY > 0 && currentIndex < items.length - 1) {
-      currentIndex++;
-      updatePickerPosition(true);
-    } else if (e.deltaY < 0 && currentIndex > 0) {
-      currentIndex--;
-      updatePickerPosition(true);
-    }
+    velocityY = -e.deltaY * 0.5;
+    currentOffset += velocityY;
+    
+    // Clamp
+    const minOffset = -(items.length - 1) * itemHeight;
+    const maxOffset = 0;
+    currentOffset = Math.max(minOffset, Math.min(maxOffset, currentOffset));
+    
+    applyTransform();
+    
+    // Debounced snap
+    clearTimeout(picker.snapTimeout);
+    picker.snapTimeout = setTimeout(snapToNearest, 150);
   }, { passive: false });
   
-  // Click on items to select
-  items.forEach((item, index) => {
-    item.addEventListener('click', (e) => {
-      e.stopPropagation();
-      currentIndex = index;
-      updatePickerPosition(true);
-      SoundFX.play(`vibe${index + 1}`);
-    });
-  });
-  
   // Initialize position
-  updatePickerPosition(false);
+  applyTransform();
 }
 
 function cyclePrompt() {
