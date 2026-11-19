@@ -6,19 +6,22 @@
   <title>vibecheck — Daily 30-Second Kumustahan</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <header class="topbar">
+  <header class="topbar glass-nav">
     <div class="brand">
       <div id="header-mascot" class="mini-mascot" aria-hidden="true"></div>
       <span class="brand-wordmark">vibecheck</span>
-      <span class="badge-pill">30s Kumustahan</span>
+      <span class="badge-pill">30-sec daily kumustahan</span>
     </div>
     <div class="topbar-actions">
       <span id="sync-status" class="sync-badge">Syncing...</span>
-      <button id="btn-ethics" class="btn-ghost" type="button">Why Vibe Check?</button>
+      <button id="btn-ethics" class="btn-ghost" type="button">
+        <span class="btn-icon">🤔</span>
+        Why Vibe Check?
+      </button>
     </div>
   </header>
 
@@ -28,10 +31,11 @@
       <div class="priority-content">
         <span class="pulse-dot"></span>
         <div>
-          <strong>Someone needs a genuine kumustahan today.</strong>
-          <p id="priority-names">Reach out offline or 1-on-1—no unsolicited fixing, just presence.</p>
+          <strong id="priority-count">2 peers need a kumustahan right now</strong>
+          <p id="priority-names">Practice Pakikipagkapwa-tao & Buber's Personal Making Present—reach out without unsolicited advice.</p>
         </div>
       </div>
+      <button id="btn-view-priority" class="btn-priority-view" type="button">View Priority</button>
     </section>
 
     <div class="grid-layout">
@@ -39,84 +43,119 @@
       <section class="card checkin-card">
         <div class="card-header">
           <div>
-            <span class="eyebrow">DAILY REFLECTIVE CHECK-IN</span>
+            <span class="eyebrow">NO LOGIN · ZERO HIYA SPACE</span>
             <h1 id="daily-prompt">Kumusta ka today, 1–5?</h1>
           </div>
           <div class="header-tools">
-            <span id="timer-badge" class="timer-pill" title="Takes less than 30 seconds">00:30</span>
-            <button id="btn-cycle-prompt" class="icon-btn" type="button" title="Switch daily prompt">↻</button>
+            <button id="btn-cycle-prompt" class="prompt-cycle-btn" type="button" title="Switch prompt">
+              <span class="prompt-indicator" id="prompt-indicator">1/3</span>
+              Switch prompt
+            </button>
           </div>
+        </div>
+
+        <!-- 30-Second Timer Bar -->
+        <div class="timer-bar-wrap">
+          <div class="timer-bar" id="timer-bar"></div>
+          <span class="timer-label" id="timer-label">
+            <span class="timer-icon">⏱️</span>
+            30s check-in
+          </span>
         </div>
 
         <!-- Reversible Octopus Mascot -->
         <div class="mascot-stage">
-          <div id="main-mascot" class="mascot-svg-wrap"></div>
-          <p id="mascot-caption" class="mascot-caption">Tap how you honestly feel—beyond "Okay lang."</p>
+          <div id="main-mascot" class="mascot-svg-wrap octo-transition"></div>
+          <p id="mascot-caption" class="mascot-caption">
+            <span class="mascot-level" id="mascot-level">Level 3 · Sakto lang</span>
+          </p>
+        </div>
+
+        <!-- Today's Kumustahan Prompt Box -->
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-title">Today's Kumustahan Prompt</span>
+          </div>
+          <div class="prompt-box-text" id="prompt-box-text">"Kumusta ka today, 1–5?"</div>
+          <p class="prompt-box-subtitle">Skip the automatic "Okay lang." Step back for 30 seconds and share your honest pulse.</p>
         </div>
 
         <form id="checkin-form">
           <!-- Quick Name Pills (Group 2 + Custom) -->
           <div class="field-group">
-            <label>Who's checking in?</label>
+            <label>1. Who's checking in?</label>
+            <div class="field-hint">Tap name or type yours</div>
             <div class="member-pills" id="member-pills">
-              <button type="button" class="pill-choice" data-name="Antonio" data-role="3CSC Group 2">Antonio</button>
-              <button type="button" class="pill-choice" data-name="Althea" data-role="3CSC Group 2">Althea</button>
-              <button type="button" class="pill-choice" data-name="Dwayne" data-role="3CSC Group 2">Dwayne</button>
-              <button type="button" class="pill-choice" data-name="Marc" data-role="3CSC Group 2">Marc</button>
-              <button type="button" class="pill-choice" data-name="" data-role="Friend / Family">+ Other</button>
+              <button type="button" class="pill-choice" data-name="Antonio" data-role="3CSC · Group 2">Antonio</button>
+              <button type="button" class="pill-choice" data-name="Althea" data-role="3CSC · Group 2">Althea</button>
+              <button type="button" class="pill-choice" data-name="Dwayne" data-role="3CSC · Group 2">Dwayne</button>
+              <button type="button" class="pill-choice" data-name="Marc" data-role="3CSC · Group 2">Marc</button>
+              <button type="button" class="pill-choice pill-add" data-name="" data-role="Close Friends">+ Classmate / Family</button>
             </div>
-            <div class="input-row">
-              <input type="text" id="input-name" placeholder="Your name or nickname" required maxlength="32" />
-              <input type="text" id="input-role" placeholder="Circle (e.g., 3CSC, Family)" maxlength="28" />
+            <input type="text" id="input-name" placeholder="Your name or nickname" required maxlength="32" />
+            
+            <!-- Circle Selector Dropdown -->
+            <div class="circle-selector-wrap">
+              <select id="input-role" class="circle-selector">
+                <option value="3CSC · Group 2">3CSC · Group 2</option>
+                <option value="3CSC Blockmate">3CSC Blockmate</option>
+                <option value="Family / Home">Family / Home</option>
+                <option value="Close Friends">Close Friends</option>
+              </select>
             </div>
           </div>
 
           <!-- 1-5 Vibe Selector -->
           <div class="field-group">
-            <label>Honest Vibe Level (1 = Mabigat, 5 = Masaya)</label>
+            <label>2. Tap your real vibe (1–5)</label>
+            <div class="field-hint" id="vibe-hint">Pushing through today</div>
             <div class="vibe-scale" id="vibe-scale">
               <button type="button" class="vibe-btn" data-level="1">
                 <span class="vibe-num">1</span>
                 <span class="vibe-label">Mabigat</span>
+                <span class="vibe-sublabel">Overwhelmed</span>
               </button>
               <button type="button" class="vibe-btn" data-level="2">
                 <span class="vibe-num">2</span>
                 <span class="vibe-label">Pagod</span>
+                <span class="vibe-sublabel">Drained</span>
               </button>
               <button type="button" class="vibe-btn" data-level="3">
                 <span class="vibe-num">3</span>
                 <span class="vibe-label">Sakto lang</span>
+                <span class="vibe-sublabel">Surviving</span>
               </button>
               <button type="button" class="vibe-btn" data-level="4">
                 <span class="vibe-num">4</span>
                 <span class="vibe-label">Maayos</span>
+                <span class="vibe-sublabel">Doing Well</span>
               </button>
               <button type="button" class="vibe-btn" data-level="5">
                 <span class="vibe-num">5</span>
                 <span class="vibe-label">Masaya</span>
+                <span class="vibe-sublabel">Thriving</span>
               </button>
             </div>
           </div>
 
           <!-- Quick Tags to overcome hiya -->
           <div class="field-group">
-            <label>Quick context (optional — skip typing if tired)</label>
-            <div class="tag-cloud" id="tag-cloud">
-              <button type="button" class="tag-chip" data-tag="Acads overload">Acads overload</button>
-              <button type="button" class="tag-chip" data-tag="Need pahinga">Need pahinga</button>
-              <button type="button" class="tag-chip" data-tag="Just need kausap">Just need kausap</button>
-              <button type="button" class="tag-chip" data-tag="No advice, just listen">No advice, just listen</button>
-              <button type="button" class="tag-chip" data-tag="Grateful today">Grateful today</button>
+            <label>3. No-Filter 1-Liner (optional — break past hiya)</label>
+            <div class="field-hint">
+              <span id="note-counter">0/110</span>
             </div>
-          </div>
-
-          <!-- Optional 1-line note -->
-          <div class="field-group">
-            <input type="text" id="input-note" placeholder="One honest sentence (optional)..." maxlength="140" />
+            <div class="tag-cloud" id="tag-cloud">
+              <button type="button" class="tag-chip" data-tag="Acads pressure 📚">Acads pressure 📚</button>
+              <button type="button" class="tag-chip" data-tag="Pagod lang 🔋">Pagod lang 🔋</button>
+              <button type="button" class="tag-chip" data-tag="Need kausap ☕">Need kausap ☕</button>
+              <button type="button" class="tag-chip" data-tag="All goods ✨">All goods ✨</button>
+            </div>
+            <textarea id="input-note" placeholder="One honest sentence (optional)..." maxlength="110" rows="2"></textarea>
           </div>
 
           <button type="submit" id="btn-submit" class="btn-primary">
-            Share Honest Pulse
+            <span class="btn-icon">📊</span>
+            Drop My 30-Sec Vibe Check
           </button>
         </form>
       </section>
@@ -125,10 +164,24 @@
       <section class="card board-card">
         <div class="card-header">
           <div>
-            <span class="eyebrow">SHARED CIRCLE PULSE BOARD</span>
-            <h2>Kumusta ang tropa?</h2>
+            <span class="eyebrow">LIVE PULSE BOARD</span>
+            <h2>
+              <span id="board-count">5 today</span>
+            </h2>
           </div>
-          <button id="btn-refresh" class="btn-ghost" type="button">Refresh</button>
+          <button id="btn-refresh" class="btn-ghost" type="button">
+            <span class="btn-icon">🔄</span>
+            Refresh
+          </button>
+        </div>
+
+        <p class="board-subtitle">See who is thriving and who needs a genuine, offline kumustahan.</p>
+
+        <!-- Filter Pills -->
+        <div class="filter-pills" id="filter-pills">
+          <button type="button" class="filter-pill active" data-filter="all">All</button>
+          <button type="button" class="filter-pill" data-filter="needs">Needs Kumustahan (1–2)</button>
+          <button type="button" class="filter-pill" data-filter="doing-well">Doing Well (3–5)</button>
         </div>
 
         <div id="pulse-list" class="pulse-list">
@@ -138,40 +191,133 @@
     </div>
   </main>
 
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <strong>vibecheck — A Daily 30-Second Kumustahan Web App</strong>
+        <p>University of Santo Tomas · College of Information and Computing Sciences · 3CSC Group 2 (026.26.ETHICS)</p>
+      </div>
+      <button id="btn-reset-sample" class="btn-ghost btn-sm" type="button">Reset sample board</button>
+    </div>
+  </footer>
+
+  <!-- Toast Notification -->
+  <div id="toast-notification" class="toast-notification hidden">
+    <span class="toast-icon">👋</span>
+    <span class="toast-message">Sent Apir!</span>
+  </div>
+
   <!-- Kumustahan Reach-Out Modal -->
   <div id="reachout-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
     <div class="modal-card">
       <div class="modal-header">
         <div>
-          <span class="eyebrow">ETHICAL ACTION · PERSONAL MAKING PRESENT</span>
+          <span class="modal-icon">🤝</span>
           <h3 id="modal-peer-title">Kumustahin si Peer</h3>
+          <p class="modal-level" id="modal-peer-level">Level 1 · Mabigat / Overwhelmed</p>
         </div>
         <button id="close-reachout" class="icon-btn" type="button">✕</button>
       </div>
-      <p id="modal-peer-context" class="modal-subtext"></p>
-      <div class="guidance-box">
-        <strong>Buber's Dialogue Reminder:</strong> Practice <em>Confirmation</em> and <em>Unfolding</em>. Listen without judging or rushing to fix their problem.
+      
+      <div class="modal-section">
+        <div class="modal-section-title">Their honest pulse note</div>
+        <p id="modal-peer-context" class="modal-pulse-note"></p>
       </div>
-      <label class="modal-label">1-Tap Genuine Icebreakers (Copy & send via Messenger / SMS):</label>
-      <div id="icebreaker-list" class="icebreaker-list"></div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">Ethical Encounter Checklist (Buber & Pakikipagkapwa-tao)</div>
+        <ul class="ethics-checklist">
+          <li>✓ <strong>Personal Making Present:</strong> Approach them as a whole person, not a problem to fix. Listen without immediately imposing unsolicited advice.</li>
+          <li>✓ <strong>Confirmation & Unfolding:</strong> Affirm that it's okay not to be "Okay lang." Let their real feelings unfold safely.</li>
+        </ul>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-header">
+          <span class="modal-section-title">1-Click Kumustahan Starter (Copy & Send via Messenger/IG/SMS)</span>
+          <button id="btn-switch-icebreaker" class="btn-text-link" type="button">Try another phrasing</button>
+        </div>
+        <div id="icebreaker-list" class="icebreaker-list"></div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="btn-copy-message" class="btn-modal-action" type="button">
+          <span class="btn-icon">📋</span>
+          Copy Message
+        </button>
+        <button id="btn-log-kumustahan" class="btn-modal-action btn-modal-secondary" type="button">
+          ✓ Log Kumustahan Initiated
+        </button>
+      </div>
     </div>
   </div>
 
   <!-- Why Vibe Check Philosophical Modal -->
   <div id="ethics-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-    <div class="modal-card">
+    <div class="modal-card modal-card-large">
       <div class="modal-header">
         <div>
-          <span class="eyebrow">UST CICS · ETHICS PROPOSAL FOR CHANGE</span>
-          <h3>Why "vibecheck"?</h3>
+          <span class="eyebrow">UST CICS · 026.26.ETHICS PROPOSAL</span>
+          <h3>Why "vibecheck"? Philosophical Grounding</h3>
         </div>
         <button id="close-ethics" class="icon-btn" type="button">✕</button>
       </div>
-      <div class="ethics-points">
-        <p><strong>1. Beyond "Okay lang" & Hiya:</strong> Replaces passive resiliency and surface-level <em>pakikisama</em> with authentic <em>pakikipagkapwa-tao</em>.</p>
-        <p><strong>2. Martin Buber's Interhuman:</strong> Moves us from <em>Seeming</em> (projecting false wellness) to <em>Being</em>, enabling genuine <em>Personal Making Present</em> when a peer is struggling.</p>
-        <p><strong>3. Four Ethical Components:</strong> Sharpens <em>Ethical Sensitivity</em> to notice silent struggles and turns empathy into concrete <em>Ethical Action</em>.</p>
-        <p><strong>4. Power of Distance & Reflective Morality:</strong> 30 seconds of deliberate self-reflection elevates routine greetings into a conscious Human Act.</p>
+      
+      <div class="ethics-intro">
+        <strong>The Everyday Problem:</strong>
+        <p>Bound by propriety (hiya) and passive resiliency, students routinely default to saying "Okay lang" ("I am fine") in noisy group chats—suffering in isolation while projecting a fabricated image of wellness.</p>
+      </div>
+
+      <div class="ethics-frameworks">
+        <div class="ethics-framework">
+          <div class="framework-header">
+            <span class="framework-number">1.</span>
+            <div>
+              <strong>Martin Buber</strong>
+              <div class="framework-subtitle">The Elements of the Interhuman</div>
+            </div>
+          </div>
+          <p>Dismantles "Seeming" (false "I'm fine" image) in favor of "Being". Reaching out to a struggling peer practices Personal Making Present and Confirmation—allowing genuine Unfolding without judgment.</p>
+        </div>
+
+        <div class="ethics-framework">
+          <div class="framework-header">
+            <span class="framework-number">2.</span>
+            <div>
+              <strong>Filipino Ethics</strong>
+              <div class="framework-subtitle">Pakikipagkapwa-tao vs. Pakikisama</div>
+            </div>
+          </div>
+          <p>Moves beyond mere outward conformity (pakikisama) to true pakikipagkapwa-tao—transforming hiya and kanya-kanya syndrome into active solidarity.</p>
+        </div>
+
+        <div class="ethics-framework">
+          <div class="framework-header">
+            <span class="framework-number">3.</span>
+            <div>
+              <strong>Vessels (1998)</strong>
+              <div class="framework-subtitle">Four Ethical Components</div>
+            </div>
+          </div>
+          <p>Sharpens Ethical Sensitivity (noticing distress), guides Ethical Judgment & Motivation (prioritizing human welfare), and culminates in Ethical Action (initiating an offline kumustahan).</p>
+        </div>
+
+        <div class="ethics-framework">
+          <div class="framework-header">
+            <span class="framework-number">4.</span>
+            <div>
+              <strong>Kavanaugh, Aguas & Scheler</strong>
+              <div class="framework-subtitle">Reflective Morality & Freedom</div>
+            </div>
+          </div>
+          <p>Exercises Kavanaugh's Power of Distance to elevate automatic greetings from Customary Morality into a deliberate Human Act (Aguas), honoring Scheler's Spiritual Values.</p>
+        </div>
+      </div>
+
+      <div class="ethics-footer">
+        <p><strong>3CSC Group 2:</strong> Buenafe, Fian, Ilano, Pangan</p>
+        <button id="btn-back-ethics" class="btn-ghost" type="button">Back to Check-In</button>
       </div>
     </div>
   </div>
