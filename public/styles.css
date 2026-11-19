@@ -331,15 +331,11 @@ body.dark-mode .ambient-octopus {
 
 /* Sound toggle icons */
 .icon-volume-off { display: none; }
-body:not(.sound-off) .icon-volume-on { display: block; }
-body:not(.sound-off) .icon-volume-off { display: none; }
 body.sound-off .icon-volume-on { display: none; }
 body.sound-off .icon-volume-off { display: block; }
 
 /* Theme toggle icons - Show MOON in light mode (to switch TO dark) */
 .icon-sun { display: none; }
-body:not(.dark-mode) .icon-moon { display: block; }
-body:not(.dark-mode) .icon-sun { display: none; }
 body.dark-mode .icon-moon { display: none; }
 body.dark-mode .icon-sun { display: block; }
 
@@ -502,7 +498,111 @@ body.dark-mode .icon-sun { display: block; }
   }
 }
 
-/* ========== Vibe Scale ========== */
+/* ========== Vibe Picker (iOS-style) ========== */
+.vibe-picker-container {
+  margin-bottom: 2rem;
+}
+
+.vibe-picker-wrapper {
+  position: relative;
+  height: 240px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
+}
+
+.vibe-picker {
+  position: relative;
+  height: 100%;
+  padding: 96px 0;
+  cursor: grab;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.vibe-picker.dragging {
+  cursor: grabbing;
+  transition: none;
+}
+
+.vibe-picker-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  height: 80px;
+  padding: 1rem;
+  opacity: 0.3;
+  transform: scale(0.85);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  pointer-events: none;
+}
+
+.vibe-picker-item.active {
+  opacity: 1;
+  transform: scale(1.1);
+  font-weight: 600;
+}
+
+.vibe-picker-item[data-level="1"].active { color: var(--vibe-1); }
+.vibe-picker-item[data-level="2"].active { color: var(--vibe-2); }
+.vibe-picker-item[data-level="3"].active { color: var(--vibe-3); }
+.vibe-picker-item[data-level="4"].active { color: var(--vibe-4); }
+.vibe-picker-item[data-level="5"].active { color: var(--vibe-5); }
+
+.vibe-num {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.vibe-picker-item .vibe-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.vibe-picker-item.active .vibe-label {
+  color: inherit;
+  font-weight: 600;
+}
+
+.vibe-picker-highlight {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 80px;
+  transform: translateY(-50%);
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(255,255,255,0.03) 15%,
+    rgba(255,255,255,0.05) 50%,
+    rgba(255,255,255,0.03) 85%,
+    transparent 100%
+  );
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  pointer-events: none;
+  z-index: 1;
+}
+
+body.dark-mode .vibe-picker-highlight {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(255,255,255,0.02) 15%,
+    rgba(255,255,255,0.04) 50%,
+    rgba(255,255,255,0.02) 85%,
+    transparent 100%
+  );
+}
+
+/* ========== Old Vibe Scale (keeping for fallback) ========== */
 .vibe-scale-container {
   margin-bottom: 2rem;
 }
@@ -699,19 +799,25 @@ body.dark-mode .icon-sun { display: block; }
   border: 1px solid var(--border);
   border-radius: 999px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .member-pill:hover {
   color: var(--text-primary);
   border-color: var(--gray-300);
   background: var(--bg-primary);
+  transform: translateY(-1px) scale(1.02);
+}
+
+.member-pill:active {
+  transform: translateY(0) scale(0.98);
 }
 
 .member-pill.active {
   color: var(--brand-coral);
   background: rgba(255,59,48,0.1);
   border-color: var(--brand-coral);
+  transform: scale(1.02);
 }
 
 /* ========== Tag Pills ========== */
@@ -731,19 +837,25 @@ body.dark-mode .icon-sun { display: block; }
   border: 1px solid var(--border);
   border-radius: 999px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .tag-pill:hover {
   color: var(--text-primary);
   border-color: var(--gray-300);
   background: var(--bg-primary);
+  transform: translateY(-1px) scale(1.02);
+}
+
+.tag-pill:active {
+  transform: translateY(0) scale(0.98);
 }
 
 .tag-pill.active {
   color: var(--brand-coral);
   background: rgba(255,59,48,0.1);
   border-color: var(--brand-coral);
+  transform: scale(1.02);
 }
 
 /* ========== Buttons ========== */
@@ -772,7 +884,8 @@ body.dark-mode .icon-sun { display: block; }
 }
 
 .btn-primary:active {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.98);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:disabled {

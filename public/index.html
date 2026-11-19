@@ -121,30 +121,33 @@
             <p id="mascot-level" class="mascot-label">Level 3 — Steady</p>
           </div>
 
-          <!-- Vibe Scale (1-5) -->
-          <div class="vibe-scale-container">
+          <!-- Vibe Picker (iOS-style) -->
+          <div class="vibe-picker-container">
             <label class="field-label">How are you really feeling?</label>
-            <div class="vibe-scale" id="vibe-scale">
-              <button type="button" class="vibe-btn" data-level="1">
-                <span class="vibe-num">1</span>
-                <span class="vibe-label">Heavy</span>
-              </button>
-              <button type="button" class="vibe-btn" data-level="2">
-                <span class="vibe-num">2</span>
-                <span class="vibe-label">Drained</span>
-              </button>
-              <button type="button" class="vibe-btn active" data-level="3">
-                <span class="vibe-num">3</span>
-                <span class="vibe-label">Steady</span>
-              </button>
-              <button type="button" class="vibe-btn" data-level="4">
-                <span class="vibe-num">4</span>
-                <span class="vibe-label">Good</span>
-              </button>
-              <button type="button" class="vibe-btn" data-level="5">
-                <span class="vibe-num">5</span>
-                <span class="vibe-label">Great</span>
-              </button>
+            <div class="vibe-picker-wrapper">
+              <div class="vibe-picker" id="vibe-picker">
+                <div class="vibe-picker-item" data-level="1">
+                  <span class="vibe-num">1</span>
+                  <span class="vibe-label">Heavy</span>
+                </div>
+                <div class="vibe-picker-item" data-level="2">
+                  <span class="vibe-num">2</span>
+                  <span class="vibe-label">Drained</span>
+                </div>
+                <div class="vibe-picker-item active" data-level="3">
+                  <span class="vibe-num">3</span>
+                  <span class="vibe-label">Steady</span>
+                </div>
+                <div class="vibe-picker-item" data-level="4">
+                  <span class="vibe-num">4</span>
+                  <span class="vibe-label">Good</span>
+                </div>
+                <div class="vibe-picker-item" data-level="5">
+                  <span class="vibe-num">5</span>
+                  <span class="vibe-label">Great</span>
+                </div>
+              </div>
+              <div class="vibe-picker-highlight"></div>
             </div>
           </div>
         </div>

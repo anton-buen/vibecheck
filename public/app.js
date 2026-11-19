@@ -37,6 +37,15 @@ const SoundFX = {
           oscillator.start(ctx.currentTime);
           oscillator.stop(ctx.currentTime + 0.05);
           break;
+        
+        case 'tick':
+          // Short, satisfying tick sound for picker scrolling
+          oscillator.frequency.setValueAtTime(1200, ctx.currentTime);
+          gainNode.gain.setValueAtTime(0.12, ctx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.03);
+          oscillator.start(ctx.currentTime);
+          oscillator.stop(ctx.currentTime + 0.03);
+          break;
           
         case 'vibe1':
           oscillator.frequency.setValueAtTime(220, ctx.currentTime);
@@ -871,10 +880,137 @@ function resetForm() {
 
 function updateVibeSelection(level) {
   selectedLevel = level;
+  
+  // Update picker items
+  document.querySelectorAll(".vibe-picker-item").forEach((item) => {
+    item.classList.toggle("active", Number(item.dataset.level) === level);
+  });
+  
+  // Update old buttons if they exist (fallback)
   document.querySelectorAll(".vibe-btn").forEach((b) => b.classList.remove("active"));
-  document.querySelector(`.vibe-btn[data-level="${level}"]`).classList.add("active");
+  const btn = document.querySelector(`.vibe-btn[data-level="${level}"]`);
+  if (btn) btn.classList.add("active");
+  
   updateMascotDisplay(level);
   SoundFX.play(`vibe${level}`);
+}
+
+// ========== iOS-Style Vibe Picker ==========
+function initVibePicker() {
+  const picker = document.getElementById('vibe-picker');
+  if (!picker) return;
+  
+  const itemHeight = 80; // Height of each picker item
+  const items = Array.from(picker.querySelectorAll('.vibe-picker-item'));
+  let currentIndex = 2; // Start at level 3 (index 2)
+  let startY = 0;
+  let currentY = 0;
+  let isDragging = false;
+  let lastTickLevel = 3;
+  
+  function updatePickerPosition(smooth = true) {
+    const offset = -currentIndex * itemHeight;
+    
+    if (smooth) {
+      picker.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    } else {
+      picker.style.transition = 'none';
+    }
+    
+    picker.style.transform = `translateY(${offset}px)`;
+    
+    // Update active item
+    items.forEach((item, index) => {
+      item.classList.toggle('active', index === currentIndex);
+    });
+    
+    // Update selected level (1-indexed)
+    const newLevel = currentIndex + 1;
+    
+    // Play tick sound if level changed
+    if (newLevel !== lastTickLevel) {
+      SoundFX.play('tick');
+      lastTickLevel = newLevel;
+    }
+    
+    selectedLevel = newLevel;
+    updateMascotDisplay(newLevel);
+  }
+  
+  function handleStart(e) {
+    isDragging = true;
+    picker.classList.add('dragging');
+    startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+    currentY = startY;
+  }
+  
+  function handleMove(e) {
+    if (!isDragging) return;
+    
+    e.preventDefault();
+    const y = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+    const deltaY = y - startY;
+    
+    // Calculate new index based on drag distance
+    const newIndex = Math.round(currentIndex - deltaY / itemHeight);
+    const clampedIndex = Math.max(0, Math.min(items.length - 1, newIndex));
+    
+    if (clampedIndex !== currentIndex) {
+      currentIndex = clampedIndex;
+      updatePickerPosition(false);
+    }
+    
+    currentY = y;
+  }
+  
+  function handleEnd() {
+    if (!isDragging) return;
+    
+    isDragging = false;
+    picker.classList.remove('dragging');
+    
+    // Snap to nearest item
+    updatePickerPosition(true);
+    
+    // Play vibe sound on release
+    SoundFX.play(`vibe${selectedLevel}`);
+  }
+  
+  // Mouse events
+  picker.addEventListener('mousedown', handleStart);
+  document.addEventListener('mousemove', handleMove);
+  document.addEventListener('mouseup', handleEnd);
+  
+  // Touch events
+  picker.addEventListener('touchstart', handleStart, { passive: false });
+  picker.addEventListener('touchmove', handleMove, { passive: false });
+  picker.addEventListener('touchend', handleEnd);
+  
+  // Scroll wheel support
+  picker.parentElement.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    
+    if (e.deltaY > 0 && currentIndex < items.length - 1) {
+      currentIndex++;
+      updatePickerPosition(true);
+    } else if (e.deltaY < 0 && currentIndex > 0) {
+      currentIndex--;
+      updatePickerPosition(true);
+    }
+  }, { passive: false });
+  
+  // Click on items to select
+  items.forEach((item, index) => {
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      currentIndex = index;
+      updatePickerPosition(true);
+      SoundFX.play(`vibe${index + 1}`);
+    });
+  });
+  
+  // Initialize position
+  updatePickerPosition(false);
 }
 
 function cyclePrompt() {
@@ -996,7 +1132,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // Prompt cycling
   document.getElementById("btn-cycle-prompt").addEventListener("click", cyclePrompt);
 
-  // Vibe level buttons
+  // Initialize iOS-style vibe picker
+  initVibePicker();
+
+  // Vibe level buttons (fallback for old layout)
   document.querySelectorAll(".vibe-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       updateVibeSelection(Number(btn.dataset.level));
