@@ -78,6 +78,24 @@
     <div class="grid-layout">
       <!-- LEFT COLUMN: 30-Second Check-In Card -->
       <section class="card checkin-card">
+        <!-- Room Bar -->
+        <div class="room-bar">
+          <div class="room-info">
+            <span class="room-label">Room:</span>
+            <span class="room-code" id="currentRoomCode">general</span>
+          </div>
+          <div class="room-actions">
+            <button id="btn-switch-room" class="btn-room" type="button">
+              <span class="btn-icon">🚪</span>
+              Switch / New Room
+            </button>
+            <button id="btn-copy-invite" class="btn-room btn-invite" type="button">
+              <span class="btn-icon">📋</span>
+              Copy GC Invite Link
+            </button>
+          </div>
+        </div>
+
         <div class="card-header">
           <div>
             <span class="eyebrow">NO LOGIN · ZERO HIYA SPACE</span>
@@ -118,16 +136,12 @@
         </div>
 
         <form id="checkin-form">
-          <!-- Quick Name Pills (Group 2 + Custom) -->
+          <!-- Quick Name Pills (Dynamic from Room Members) -->
           <div class="field-group">
             <label>1. Who's checking in?</label>
             <div class="field-hint">Tap name or type yours</div>
             <div class="member-pills" id="member-pills">
-              <button type="button" class="pill-choice" data-name="Antonio" data-role="3CSC · Group 2">Antonio</button>
-              <button type="button" class="pill-choice" data-name="Althea" data-role="3CSC · Group 2">Althea</button>
-              <button type="button" class="pill-choice" data-name="Dwayne" data-role="3CSC · Group 2">Dwayne</button>
-              <button type="button" class="pill-choice" data-name="Marc" data-role="3CSC · Group 2">Marc</button>
-              <button type="button" class="pill-choice pill-add" data-name="" data-role="Close Friends">+ Classmate / Family</button>
+              <!-- Dynamically populated from room members -->
             </div>
             <input type="text" id="input-name" placeholder="Your name or nickname" required maxlength="32" />
             
@@ -138,6 +152,7 @@
                 <option value="3CSC Blockmate">3CSC Blockmate</option>
                 <option value="Family / Home">Family / Home</option>
                 <option value="Close Friends">Close Friends</option>
+                <option value="Peer">Peer</option>
               </select>
             </div>
           </div>
@@ -243,6 +258,33 @@
   <div id="toast-notification" class="toast-notification hidden">
     <span class="toast-icon">👋</span>
     <span class="toast-message">Sent Apir!</span>
+  </div>
+
+  <!-- Room Switch Modal -->
+  <div id="room-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <span class="modal-icon">🚪</span>
+          <h3>Switch or Create Room</h3>
+        </div>
+        <button id="close-room-modal" class="icon-btn" type="button">✕</button>
+      </div>
+      
+      <div class="modal-section">
+        <p style="margin-bottom: 1rem; color: #3F3F46;">Enter a room code to join an existing room or create a new one. Share the invite link with your group!</p>
+        
+        <label class="modal-label">Room Code (lowercase, letters, numbers, hyphens only)</label>
+        <input type="text" id="input-room-code" placeholder="e.g., 3csc-group2, family-gc, friends" maxlength="50" style="margin-bottom: 1rem;" />
+        
+        <div class="modal-actions" style="grid-template-columns: 1fr; border-top: none; padding-top: 0; margin-top: 0;">
+          <button id="btn-join-room" class="btn-modal-action" type="button">
+            <span class="btn-icon">✓</span>
+            Join / Create Room
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Kumustahan Reach-Out Modal -->

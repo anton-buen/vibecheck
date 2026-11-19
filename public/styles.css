@@ -231,6 +231,105 @@ body {
   }
 }
 
+/* ========== Room Bar ========== */
+.room-bar {
+  background: linear-gradient(135deg, #FAFAFA 0%, #F4F4F5 100%);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.room-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.room-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.room-code {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--brand-coral);
+  font-family: 'Courier New', monospace;
+  background: white;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.room-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-room {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text-main);
+}
+
+.btn-room:hover {
+  border-color: var(--brand-coral);
+  background: var(--brand-coral-soft);
+  color: var(--brand-coral);
+}
+
+.btn-invite {
+  background: var(--brand-coral);
+  color: white;
+  border-color: var(--brand-coral);
+}
+
+.btn-invite:hover {
+  background: var(--brand-coral-dark);
+  border-color: var(--brand-coral-dark);
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .room-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .room-info {
+    justify-content: center;
+  }
+  
+  .room-actions {
+    flex-direction: column;
+  }
+  
+  .btn-room {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 /* ========== Cards ========== */
 .card {
   background: var(--surface);

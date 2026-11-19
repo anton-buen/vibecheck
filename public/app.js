@@ -120,6 +120,54 @@ const PROMPTS = [
   'Beyond "Okay lang" — how is your energy right now?',
 ];
 
+// ========== State ==========
+let promptIndex = 0;
+let selectedLevel = 3;
+let selectedTags = new Set();
+let pulses = [];
+let roomMembers = [];
+let currentRoom = 'general';
+let userProfile = null;
+let currentFilter = 'all';
+let secondsLeft = 30;
+let timerInterval = null;
+let currentIcebreakerIndex = 0;
+
+// ========== Room Management ==========
+function getRoomFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  const room = params.get('room');
+  return room ? room.toLowerCase().replace(/[^a-z0-9-]/g, '').substring(0, 50) : 'general';
+}
+
+function setRoomInURL(roomId) {
+  const url = new URL(window.location);
+  url.searchParams.set('room', roomId);
+  window.history.pushState({}, '', url);
+}
+
+function getUserProfile() {
+  const saved = localStorage.getItem('vibecheck_profile');
+  return saved ? JSON.parse(saved) : null;
+}
+
+function saveUserProfile(name, role) {
+  const profile = { name, role, savedAt: new Date().toISOString() };
+  localStorage.setItem('vibecheck_profile', JSON.stringify(profile));
+  return profile;
+}
+
+async function switchRoom(newRoomId) {
+  if (!newRoomId) return;
+  
+  currentRoom = newRoomId.toLowerCase().replace(/[^a-z0-9-]/g, '').substring(0, 50) || 'general';
+  setRoomInURL(currentRoom);
+  document.getElementById('currentRoomCode').textContent = currentRoom;
+  
+  await loadPulses();
+  renderMemberPills();
+}
+
 const OCTO_MOOD_THEMES = {
   1: {
     // Exact match to favicon_vibecheck.jpg (Coral Red, Angry/Heavy)
@@ -308,23 +356,26 @@ let currentIcebreakerIndex = 0;
 async function loadPulses() {
   const syncBadge = document.getElementById("sync-status");
   try {
-    const res = await fetch("/api/pulses");
+    const res = await fetch(`/api/pulses?room=${currentRoom}`);
     const data = await res.json();
-    if (res.ok && Array.isArray(data.pulses)) {
-      pulses = data.pulses;
-      localStorage.setItem("vibecheck_backup", JSON.stringify(pulses));
+    if (res.ok && data.room) {
+      pulses = data.pulses || [];
+      roomMembers = data.members || [];
+      localStorage.setItem(`vibecheck_backup_${currentRoom}`, JSON.stringify(pulses));
       syncBadge.textContent = "● Live on Vercel";
       syncBadge.classList.add("live");
     } else {
       throw new Error("Fallback to local");
     }
   } catch {
-    pulses = JSON.parse(localStorage.getItem("vibecheck_backup") || "[]");
+    pulses = JSON.parse(localStorage.getItem(`vibecheck_backup_${currentRoom}`) || "[]");
+    roomMembers = [];
     syncBadge.textContent = "Local Preview";
     syncBadge.classList.remove("live");
   }
   renderBoard();
   updatePriorityBanner();
+  renderMemberPills();
 }
 
 async function savePulse(payload) {
@@ -337,12 +388,12 @@ async function savePulse(payload) {
     const res = await fetch("/api/pulses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ ...payload, room: currentRoom }),
     });
     const data = await res.json();
     if (res.ok && data.pulses) {
       pulses = data.pulses;
-      localStorage.setItem("vibecheck_backup", JSON.stringify(pulses));
+      localStorage.setItem(`vibecheck_backup_${currentRoom}`, JSON.stringify(pulses));
     } else {
       throw new Error("API unavailable");
     }
@@ -359,15 +410,36 @@ async function savePulse(payload) {
         (p) => p.name.toLowerCase() !== payload.name.toLowerCase(),
       ),
     ];
-    localStorage.setItem("vibecheck_backup", JSON.stringify(pulses));
+    localStorage.setItem(`vibecheck_backup_${currentRoom}`, JSON.stringify(pulses));
   } finally {
     btn.disabled = false;
     btn.innerHTML = '<span class="btn-icon">✅</span> Pulse Shared!';
     showToast("Sent Apir!");
     setTimeout(() => (btn.innerHTML = originalText), 2000);
-    renderBoard();
-    updatePriorityBanner();
+    await loadPulses();
     resetForm();
+  }
+}
+
+async function joinRoom(name, role) {
+  try {
+    const res = await fetch("/api/pulses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        action: 'join',
+        room: currentRoom,
+        name,
+        role 
+      }),
+    });
+    const data = await res.json();
+    if (res.ok && data.members) {
+      roomMembers = data.members;
+      renderMemberPills();
+    }
+  } catch (err) {
+    console.error('Failed to join room:', err);
   }
 }
 
@@ -381,6 +453,34 @@ function timeAgo(iso) {
   const hrs = Math.floor(diffMins / 60);
   if (hrs < 24) return `${hrs}h ago`;
   return `${Math.floor(hrs / 24)}d ago`;
+}
+
+function renderMemberPills() {
+  const container = document.getElementById("member-pills");
+  if (!container) return;
+
+  if (roomMembers.length === 0) {
+    container.innerHTML = '<p style="font-size: 0.8rem; color: var(--text-muted); margin: 0.5rem 0;">No members yet. Be the first to join!</p>';
+    return;
+  }
+
+  container.innerHTML = roomMembers
+    .map((member) => `
+      <button type="button" class="pill-choice" data-name="${escapeHtml(member.name)}" data-role="${escapeHtml(member.role)}">
+        ${escapeHtml(member.name)}
+      </button>
+    `)
+    .join("");
+
+  // Re-attach event listeners
+  container.querySelectorAll(".pill-choice").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      container.querySelectorAll(".pill-choice").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("input-name").value = btn.dataset.name;
+      document.getElementById("input-role").value = btn.dataset.role;
+    });
+  });
 }
 
 function renderBoard() {
@@ -398,7 +498,21 @@ function renderBoard() {
   boardCount.textContent = `${pulses.length} today`;
 
   if (filteredPulses.length === 0) {
-    list.innerHTML = `<p style="color:#71717A;font-size:0.88rem;text-align:center;padding:2rem 1rem;">No check-ins matching this filter yet.</p>`;
+    if (pulses.length === 0) {
+      // Empty room - encouraging message
+      list.innerHTML = `
+        <div style="text-align: center; padding: 3rem 1.5rem;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">🐙</div>
+          <h3 style="color: var(--text-main); margin-bottom: 0.5rem; font-size: 1.1rem;">No check-ins yet today</h3>
+          <p style="color: var(--text-muted); font-size: 0.88rem; max-width: 320px; margin: 0 auto;">
+            Be the first in <strong>${currentRoom}</strong> to break past "Okay lang" and share your honest vibe!
+          </p>
+        </div>
+      `;
+    } else {
+      // Filter returned no results
+      list.innerHTML = `<p style="color:#71717A;font-size:0.88rem;text-align:center;padding:2rem 1rem;">No check-ins matching this filter.</p>`;
+    }
     return;
   }
 
@@ -590,6 +704,17 @@ function hexToRgb(hex) {
 
 // ========== Initialization ==========
 document.addEventListener("DOMContentLoaded", () => {
+  // Initialize room from URL
+  currentRoom = getRoomFromURL();
+  document.getElementById('currentRoomCode').textContent = currentRoom;
+  
+  // Load user profile
+  userProfile = getUserProfile();
+  if (userProfile) {
+    document.getElementById("input-name").value = userProfile.name;
+    document.getElementById("input-role").value = userProfile.role;
+  }
+  
   // Start chaotic loading screen immediately
   initChaoticLoadingScreen();
   
@@ -597,23 +722,44 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("header-mascot").innerHTML = renderBrandOctopusSvg(1, 'w-9 h-8');
   document.getElementById("main-mascot").innerHTML = renderBrandOctopusSvg(selectedLevel, 'w-28 h-24 octo-float');
 
+  // Room actions
+  document.getElementById("btn-switch-room").addEventListener("click", () => {
+    document.getElementById("room-modal").classList.remove("hidden");
+  });
+
+  document.getElementById("btn-copy-invite").addEventListener("click", () => {
+    const inviteLink = `${window.location.origin}/?room=${currentRoom}`;
+    navigator.clipboard.writeText(inviteLink);
+    showToast("📋 Link copied! Paste in your GC");
+  });
+
+  document.getElementById("close-room-modal").addEventListener("click", () => {
+    document.getElementById("room-modal").classList.add("hidden");
+  });
+
+  document.getElementById("btn-join-room").addEventListener("click", async () => {
+    const roomInput = document.getElementById("input-room-code");
+    const newRoom = roomInput.value.trim();
+    if (newRoom) {
+      await switchRoom(newRoom);
+      document.getElementById("room-modal").classList.add("hidden");
+      roomInput.value = "";
+      showToast(`🚪 Switched to room: ${currentRoom}`);
+    }
+  });
+
+  // Handle Enter key in room input
+  document.getElementById("input-room-code").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      document.getElementById("btn-join-room").click();
+    }
+  });
+
   // Start timer on first interaction
   document.getElementById("checkin-form").addEventListener("focus", startTimer, { once: true, capture: true });
 
   // Prompt cycling
   document.getElementById("btn-cycle-prompt").addEventListener("click", cyclePrompt);
-
-  // Quick name pills
-  document.querySelectorAll(".pill-choice").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".pill-choice").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      if (btn.dataset.name) {
-        document.getElementById("input-name").value = btn.dataset.name;
-      }
-      document.getElementById("input-role").value = btn.dataset.role;
-    });
-  });
 
   // Vibe level 1-5 buttons
   document.querySelectorAll(".vibe-btn").forEach((btn) => {
@@ -653,7 +799,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Submit form
-  document.getElementById("checkin-form").addEventListener("submit", (e) => {
+  document.getElementById("checkin-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const name = document.getElementById("input-name").value.trim();
     const role = document.getElementById("input-role").value.trim();
@@ -663,9 +809,21 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // Save profile for auto-fill
+    userProfile = saveUserProfile(name, role || "Student");
+    
+    // Check if this user is new to the room
+    const isNewMember = !roomMembers.some(m => m.name.toLowerCase() === name.toLowerCase());
+    
+    // Join room if new member
+    if (isNewMember) {
+      await joinRoom(name, role || "Student");
+    }
+
+    // Save pulse
     savePulse({
       name,
-      role: role || "3CSC · Group 2",
+      role: role || "Student",
       level: selectedLevel,
       tags: Array.from(selectedTags),
       note,
@@ -753,6 +911,13 @@ document.addEventListener("DOMContentLoaded", () => {
         backdrop.classList.add('hidden');
       }
     });
+  });
+
+  // Close room modal on backdrop click
+  document.getElementById("room-modal")?.addEventListener('click', (e) => {
+    if (e.target.id === 'room-modal') {
+      document.getElementById("room-modal").classList.add("hidden");
+    }
   });
 
   // Initialize default vibe selection

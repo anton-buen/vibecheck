@@ -8,7 +8,11 @@ const redis = hasRedis
     })
   : null;
 
-const STORAGE_KEY = 'vibecheck:pulses';
+// Sanitize room ID to lowercase alphanumeric + hyphens only
+function sanitizeRoomId(roomId) {
+  if (!roomId || typeof roomId !== 'string') return 'general';
+  return roomId.toLowerCase().replace(/[^a-z0-9-]/g, '').substring(0, 50) || 'general';
+}
 
 export default async function handler(req, res) {
   // Enable CORS for local testing
@@ -28,26 +32,83 @@ export default async function handler(req, res) {
   }
 
   try {
-    // GET: Fetch all recent pulses
+    // GET: Fetch room pulses and members
     if (req.method === 'GET') {
-      const pulses = (await redis.get(STORAGE_KEY)) || [];
-      return res.status(200).json({ pulses });
+      const roomId = sanitizeRoomId(req.query.room);
+      const pulsesKey = `vibecheck:room:${roomId}:pulses`;
+      const membersKey = `vibecheck:room:${roomId}:members`;
+      
+      const pulses = (await redis.get(pulsesKey)) || [];
+      const members = (await redis.get(membersKey)) || [];
+      
+      return res.status(200).json({ 
+        room: roomId,
+        pulses,
+        members 
+      });
     }
 
-    // POST: Save or update a member's daily pulse
+    // POST: Handle different actions
     if (req.method === 'POST') {
-      const { name, role, level, tags, note, prompt } = req.body;
+      const { action, room, name, role, level, tags, note, prompt } = req.body;
+      const roomId = sanitizeRoomId(room);
+      const pulsesKey = `vibecheck:room:${roomId}:pulses`;
+      const membersKey = `vibecheck:room:${roomId}:members`;
 
+      // Action: Join room (add member profile)
+      if (action === 'join') {
+        if (!name) {
+          return res.status(400).json({ error: 'Name is required to join a room.' });
+        }
+
+        const existingMembers = (await redis.get(membersKey)) || [];
+        const memberExists = existingMembers.some(
+          m => m.name.toLowerCase() === name.trim().toLowerCase()
+        );
+
+        if (!memberExists) {
+          const newMember = {
+            name: name.trim(),
+            role: role?.trim() || 'Peer',
+            joinedAt: new Date().toISOString()
+          };
+          const updatedMembers = [...existingMembers, newMember];
+          await redis.set(membersKey, updatedMembers);
+        }
+
+        const members = (await redis.get(membersKey)) || [];
+        return res.status(200).json({ 
+          room: roomId, 
+          members,
+          message: 'Joined room successfully' 
+        });
+      }
+
+      // Action: Submit pulse (default)
       if (!name || !level) {
         return res.status(400).json({ error: 'Name and vibe level (1-5) are required.' });
       }
 
-      const existing = (await redis.get(STORAGE_KEY)) || [];
+      const existingPulses = (await redis.get(pulsesKey)) || [];
+      const existingMembers = (await redis.get(membersKey)) || [];
+
+      // Auto-add member if not exists
+      const memberExists = existingMembers.some(
+        m => m.name.toLowerCase() === name.trim().toLowerCase()
+      );
+      if (!memberExists) {
+        const newMember = {
+          name: name.trim(),
+          role: role?.trim() || 'Peer',
+          joinedAt: new Date().toISOString()
+        };
+        await redis.set(membersKey, [...existingMembers, newMember]);
+      }
 
       const newEntry = {
         id: `${name.toLowerCase().trim()}-${Date.now()}`,
         name: name.trim(),
-        role: role?.trim() || '3CSC Peer',
+        role: role?.trim() || 'Peer',
         level: Number(level),
         tags: Array.isArray(tags) ? tags : [],
         note: note?.trim() || '',
@@ -55,14 +116,19 @@ export default async function handler(req, res) {
         updatedAt: new Date().toISOString(),
       };
 
-      // Replace existing entry for the same person today so the board stays clean
-      const filtered = existing.filter(
+      // Replace existing entry for the same person today
+      const filtered = existingPulses.filter(
         (item) => item.name.toLowerCase() !== newEntry.name.toLowerCase()
       );
       const updated = [newEntry, ...filtered].slice(0, 50);
 
-      await redis.set(STORAGE_KEY, updated);
-      return res.status(200).json({ pulse: newEntry, pulses: updated });
+      await redis.set(pulsesKey, updated);
+      
+      return res.status(200).json({ 
+        room: roomId,
+        pulse: newEntry, 
+        pulses: updated 
+      });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
