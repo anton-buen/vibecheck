@@ -115,6 +115,94 @@ const SoundFX = {
   }
 };
 
+// ========== Ambient Background Octopus ==========
+function initAmbientOctopus() {
+  const ambient = document.getElementById('ambientOctopus');
+  if (!ambient) return;
+
+  // Render the octopus SVG (using level 1 - coral red)
+  ambient.innerHTML = renderBrandOctopusSvg(1, 'w-full h-full');
+
+  const octopusSize = 88;
+  let x = (window.innerWidth - octopusSize) / 2;
+  let y = (window.innerHeight - octopusSize) / 2;
+  let velocityX = (Math.random() - 0.5) * 3; // Slower, more ambient
+  let velocityY = (Math.random() - 0.5) * 3;
+  let rotation = 0;
+  let rotationSpeed = (Math.random() - 0.5) * 2;
+  
+  const gravity = 0.15; // Gentler gravity
+  const bounce = 1.02;  // Subtle energy gain
+  const friction = 0.998;
+  const chaosWobble = 0.02; // Less chaos, more ambient
+  const maxSpeed = 5; // Slower max speed
+
+  function animateAmbient() {
+    // Recalculate bounds on each frame (handles resize)
+    const maxX = window.innerWidth - octopusSize;
+    const maxY = window.innerHeight - octopusSize;
+    
+    velocityX += (Math.random() - 0.5) * chaosWobble * 10;
+    velocityY += (Math.random() - 0.5) * chaosWobble * 10;
+    velocityY += gravity;
+    
+    x += velocityX;
+    y += velocityY;
+    
+    velocityX *= friction;
+    velocityY *= friction;
+    
+    const speed = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
+    if (speed > maxSpeed) {
+      velocityX = (velocityX / speed) * maxSpeed;
+      velocityY = (velocityY / speed) * maxSpeed;
+    }
+    
+    rotation += rotationSpeed;
+    rotationSpeed *= 0.99;
+    rotationSpeed += (Math.random() - 0.5) * 0.5;
+    
+    // Strict boundary clamping
+    if (x < 0) {
+      x = 0;
+      velocityX = Math.abs(velocityX) * bounce;
+      velocityY += (Math.random() - 0.5) * 2;
+      rotationSpeed = -rotationSpeed * 1.2 + (Math.random() - 0.5) * 3;
+    }
+    if (x > maxX) {
+      x = maxX;
+      velocityX = -Math.abs(velocityX) * bounce;
+      velocityY += (Math.random() - 0.5) * 2;
+      rotationSpeed = -rotationSpeed * 1.2 + (Math.random() - 0.5) * 3;
+    }
+    if (y < 0) {
+      y = 0;
+      velocityY = Math.abs(velocityY) * bounce;
+      velocityX += (Math.random() - 0.5) * 2;
+      rotationSpeed = -rotationSpeed * 1.1 + (Math.random() - 0.5) * 3;
+    }
+    if (y > maxY) {
+      y = maxY;
+      velocityY = -Math.abs(velocityY) * bounce;
+      velocityX += (Math.random() - 0.5) * 2;
+      rotationSpeed = -rotationSpeed * 1.1 + (Math.random() - 0.5) * 3;
+      velocityY -= Math.random() * 2;
+      velocityX += (Math.random() - 0.5) * 1.5;
+    }
+    
+    // Safety clamp
+    x = Math.max(0, Math.min(x, maxX));
+    y = Math.max(0, Math.min(y, maxY));
+    
+    const scale = 1 + Math.sin(Date.now() / 300) * 0.05;
+    ambient.style.transform = `translate(${x}px, ${y}px) rotate(${rotation}deg) scale(${scale})`;
+    
+    requestAnimationFrame(animateAmbient);
+  }
+  
+  animateAmbient();
+}
+
 // ========== Chaotic Loading Screen Physics ==========
 function initChaoticLoadingScreen() {
   const loadingScreen = document.getElementById('loading-screen');
@@ -229,6 +317,8 @@ function initChaoticLoadingScreen() {
   setTimeout(() => {
     loadingScreen.classList.add('hidden');
     clearInterval(progressInterval);
+    // Start ambient octopus after loading screen ends
+    initAmbientOctopus();
   }, 5000);
 }
 
@@ -403,32 +493,57 @@ const OCTO_MOOD_THEMES = {
   }
 };
 
-function renderBrandOctopusSvg(level = 3, sizeClass = 'w-28 h-24') {
-  const t = OCTO_MOOD_THEMES[level] || OCTO_MOOD_THEMES[3];
+function renderBrandOctopusSvg(level = 1, sizeClass = 'w-28 h-24') {
+  const t = OCTO_MOOD_THEMES[level] || OCTO_MOOD_THEMES[1];
   const uid = `octo-${level}-${Math.random().toString(36).slice(2, 6)}`;
 
   return `
-    <svg viewBox="0 0 260 220" class="${sizeClass}" aria-label="vibecheck mascot level ${level}">
+    <svg viewBox="0 0 260 220" class="${sizeClass} select-none" aria-label="vibecheck mascot level ${level}">
       <defs>
-        <radialGradient id="${uid}-dome" cx="38%" cy="28%" r="70%">
+        <!-- Unified userSpaceOnUse gradient so lighting flows seamlessly from dome into front tentacles -->
+        <radialGradient id="${uid}-body" gradientUnits="userSpaceOnUse" cx="112" cy="78" r="135">
           <stop offset="0%" stop-color="${t.bodyLight}" />
-          <stop offset="45%" stop-color="${t.bodyMain}" />
+          <stop offset="52%" stop-color="${t.bodyMain}" />
           <stop offset="100%" stop-color="${t.bodyDark}" />
         </radialGradient>
+
+        <!-- Slightly deeper gradient for the two recessed back tentacles -->
+        <linearGradient id="${uid}-back" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="${t.bodyMain}" />
+          <stop offset="100%" stop-color="${t.bodyDark}" />
+        </linearGradient>
       </defs>
-      <path d="M52,142 C18,144 10,162 24,171 C38,179 62,171 76,161 Z" fill="${t.bodyDark}"/>
+
+      <!-- Back-Left Tentacle + Grey Underside Rim -->
+      <path d="M52,142 C18,144 10,162 24,171 C38,179 62,171 76,161 Z" fill="url(#${uid}-back)"/>
       <path d="M16,163 C22,173 46,174 68,163 L64,157 C45,166 25,165 18,158 Z" fill="${t.rimColor}"/>
-      <path d="M196,138 C232,140 246,156 232,167 C218,177 192,169 178,158 Z" fill="${t.bodyDark}"/>
+
+      <!-- Back-Right Tentacle + Grey Underside Rim -->
+      <path d="M196,138 C232,140 246,156 232,167 C218,177 192,169 178,158 Z" fill="url(#${uid}-back)"/>
       <path d="M238,159 C232,169 208,171 186,160 L190,154 C209,163 229,162 236,154 Z" fill="${t.rimColor}"/>
-      <path d="M46,144 C44,72 82,34 134,34 C186,34 212,74 208,140 C206,156 174,164 132,164 C86,164 48,158 46,144 Z" fill="url(#${uid}-dome)"/>
+
+      <!-- Main Smooth Dome Head -->
+      <path d="M46,144 C44,72 82,34 134,34 C186,34 212,74 208,140 C206,156 174,164 132,164 C86,164 48,158 46,144 Z" fill="url(#${uid}-body)"/>
+
+      <!-- Left Gloss Highlight Arc -->
       <path d="M56,134 C54,82 80,48 122,44" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" opacity="0.28"/>
+
+      <!-- Top Swirl Spiral -->
       <path d="M134,47 C138,44 146,46 146,51 C146,56 136,58 129,55 C121,52 122,43 133,41 C145,39 156,45 154,53" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.45"/>
-      <path d="M74,152 C52,168 58,187 78,186 C95,185 104,171 108,159 Z" fill="${t.bodyMain}"/>
+
+      <!-- Front-Left Tentacle (Shares unified body gradient) + Grey Underside Rim -->
+      <path d="M74,152 C52,168 58,187 78,186 C95,185 104,171 108,159 Z" fill="url(#${uid}-body)"/>
       <path d="M58,176 C64,187 86,188 102,174 L97,169 C84,180 67,180 61,171 Z" fill="${t.rimColor}"/>
-      <path d="M168,151 C192,166 196,184 176,185 C158,186 146,172 142,159 Z" fill="${t.bodyMain}"/>
+
+      <!-- Front-Right Tentacle (Shares unified body gradient) + Grey Underside Rim -->
+      <path d="M168,151 C192,166 196,184 176,185 C158,186 146,172 142,159 Z" fill="url(#${uid}-body)"/>
       <path d="M192,175 C186,186 164,187 148,173 L153,168 C166,179 183,179 189,170 Z" fill="${t.rimColor}"/>
-      <path d="M107,158 C96,181 106,199 127,199 C148,199 156,181 144,158 Z" fill="${t.bodyMain}"/>
+
+      <!-- Front-Center Tentacle (Shares unified body gradient) + Grey Underside Rim -->
+      <path d="M107,158 C96,181 106,199 127,199 C148,199 156,181 144,158 Z" fill="url(#${uid}-body)"/>
       <path d="M101,185 C108,199 144,199 151,185 L145,181 C139,192 113,192 107,181 Z" fill="${t.rimColor}"/>
+
+      <!-- Facial Features (Cheeks, Eyes, Brows, Mouth) -->
       ${t.cheeks}
       ${t.eyes}
       ${t.brows}

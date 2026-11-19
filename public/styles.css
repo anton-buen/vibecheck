@@ -71,6 +71,29 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ========== Ambient Background Octopus ========== */
+.ambient-octo-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.ambient-octopus {
+  width: 88px;
+  height: 88px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0.15;
+  will-change: transform;
+}
+
+body.dark-mode .ambient-octopus {
+  opacity: 0.08;
+}
+
 /* ========== Chaotic Loading Screen ========== */
 .loading-screen {
   position: fixed;
@@ -183,6 +206,7 @@ body {
   background: var(--bg-primary);
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(12px);
+  position: relative;
 }
 
 .topnav-container {
@@ -288,7 +312,7 @@ body {
 .icon {
   width: 16px;
   height: 16px;
-  stroke-width: 1.75px;
+  stroke-width: 2px;
 }
 
 .icon-spin {
@@ -299,23 +323,27 @@ body {
   to { transform: rotate(360deg); }
 }
 
-.icon-sound-off { display: none; }
-body:not(.sound-off) .icon-sound-on { display: block; }
-body:not(.sound-off) .icon-sound-off { display: none; }
-body.sound-off .icon-sound-on { display: none; }
-body.sound-off .icon-sound-off { display: block; }
+/* Sound toggle icons */
+.icon-volume-off { display: none; }
+body:not(.sound-off) .icon-volume-on { display: block; }
+body:not(.sound-off) .icon-volume-off { display: none; }
+body.sound-off .icon-volume-on { display: none; }
+body.sound-off .icon-volume-off { display: block; }
 
-.icon-moon { display: none; }
-body:not(.dark-mode) .icon-sun { display: block; }
-body:not(.dark-mode) .icon-moon { display: none; }
-body.dark-mode .icon-sun { display: none; }
-body.dark-mode .icon-moon { display: block; }
+/* Theme toggle icons - Show MOON in light mode (to switch TO dark) */
+.icon-sun { display: none; }
+body:not(.dark-mode) .icon-moon { display: block; }
+body:not(.dark-mode) .icon-sun { display: none; }
+body.dark-mode .icon-moon { display: none; }
+body.dark-mode .icon-sun { display: block; }
 
 /* ========== Main App Container ========== */
 .app-container {
   max-width: 640px;
   margin: 0 auto;
   padding: 2rem 1.5rem 4rem;
+  position: relative;
+  z-index: 10;
 }
 
 .app-workspace {
