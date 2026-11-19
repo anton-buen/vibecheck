@@ -1,3 +1,104 @@
+// ========== Chaotic Loading Screen Physics ==========
+function initChaoticLoadingScreen() {
+  const loadingScreen = document.getElementById('loading-screen');
+  const octopus = document.getElementById('loadingOctopus');
+  const progressBar = document.getElementById('loadingProgress');
+  
+  if (!octopus) return;
+
+  // Progress animation
+  let progress = 0;
+  const progressInterval = setInterval(() => {
+    progress += Math.random() * 3 + 1;
+    if (progress >= 100) {
+      progress = 100;
+      clearInterval(progressInterval);
+    }
+    if (progressBar) {
+      progressBar.style.width = `${progress}%`;
+    }
+  }, 100);
+
+  // Weird physics parameters
+  let x = window.innerWidth / 2;
+  let y = window.innerHeight / 2;
+  let velocityX = (Math.random() - 0.5) * 15; // Random initial velocity
+  let velocityY = (Math.random() - 0.5) * 15;
+  let rotation = 0;
+  let rotationSpeed = (Math.random() - 0.5) * 8;
+  
+  const gravity = 0.5; // Weird gravity
+  const bounce = 0.85; // Bounce coefficient
+  const friction = 0.99; // Air resistance
+  const chaosWobble = 0.02; // Random chaos factor
+
+  function animateOctopus() {
+    // Add weird chaos to velocity
+    velocityX += (Math.random() - 0.5) * chaosWobble * 10;
+    velocityY += (Math.random() - 0.5) * chaosWobble * 10;
+    
+    // Apply gravity
+    velocityY += gravity;
+    
+    // Update position
+    x += velocityX;
+    y += velocityY;
+    
+    // Apply friction
+    velocityX *= friction;
+    velocityY *= friction;
+    
+    // Chaotic rotation
+    rotation += rotationSpeed;
+    rotationSpeed *= 0.99;
+    rotationSpeed += (Math.random() - 0.5) * 0.3;
+    
+    // Bounce off walls with weird physics
+    const octopusSize = 120;
+    
+    // Left/Right walls
+    if (x <= octopusSize / 2) {
+      x = octopusSize / 2;
+      velocityX = Math.abs(velocityX) * bounce;
+      rotationSpeed = -rotationSpeed * 1.2; // Spin on bounce
+    } else if (x >= window.innerWidth - octopusSize / 2) {
+      x = window.innerWidth - octopusSize / 2;
+      velocityX = -Math.abs(velocityX) * bounce;
+      rotationSpeed = -rotationSpeed * 1.2;
+    }
+    
+    // Top/Bottom walls
+    if (y <= octopusSize / 2) {
+      y = octopusSize / 2;
+      velocityY = Math.abs(velocityY) * bounce;
+      rotationSpeed = -rotationSpeed * 1.1;
+    } else if (y >= window.innerHeight - octopusSize / 2) {
+      y = window.innerHeight - octopusSize / 2;
+      velocityY = -Math.abs(velocityY) * bounce;
+      rotationSpeed = -rotationSpeed * 1.1;
+      // Add extra bounce energy from bottom
+      velocityY -= Math.random() * 2;
+    }
+    
+    // Apply transform
+    octopus.style.transform = `translate(${x - octopusSize / 2}px, ${y - octopusSize / 2}px) rotate(${rotation}deg)`;
+    
+    // Continue animation
+    if (!loadingScreen.classList.contains('hidden')) {
+      requestAnimationFrame(animateOctopus);
+    }
+  }
+  
+  // Start animation
+  animateOctopus();
+  
+  // Hide loading screen after minimum 5 seconds
+  setTimeout(() => {
+    loadingScreen.classList.add('hidden');
+    clearInterval(progressInterval);
+  }, 5000);
+}
+
 // ========== Configuration ==========
 const PROMPTS = [
   "Kumusta ka today, 1–5?",
@@ -475,6 +576,9 @@ function hexToRgb(hex) {
 
 // ========== Initialization ==========
 document.addEventListener("DOMContentLoaded", () => {
+  // Start chaotic loading screen immediately
+  initChaoticLoadingScreen();
+  
   // Render initial mascots with unified brand octopus
   document.getElementById("header-mascot").innerHTML = renderBrandOctopusSvg(1, 'w-9 h-8');
   document.getElementById("main-mascot").innerHTML = renderBrandOctopusSvg(selectedLevel, 'w-28 h-24 octo-float');
