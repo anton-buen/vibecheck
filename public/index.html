@@ -25,7 +25,7 @@
   <meta name="twitter:image" content="/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
@@ -47,358 +47,451 @@
       </div>
     </div>
   </div>
-  <header class="topbar glass-nav">
-    <div class="brand">
-      <div id="header-mascot" class="mini-mascot" aria-hidden="true"></div>
-      <span class="brand-wordmark">vibecheck</span>
-      <span class="badge-pill">30-sec daily kumustahan</span>
-    </div>
-    <div class="topbar-actions">
-      <span id="sync-status" class="sync-badge">Syncing...</span>
-      <button id="btn-ethics" class="btn-ghost" type="button">
-        <span class="btn-icon">🤔</span>
-        Why Vibe Check?
-      </button>
-    </div>
-  </header>
 
-  <main class="container">
-    <!-- Priority Support Banner (shown when someone is at Level 1 or 2) -->
-    <section id="priority-banner" class="priority-banner hidden" role="alert">
-      <div class="priority-content">
-        <span class="pulse-dot"></span>
-        <div>
-          <strong id="priority-count">2 peers need a kumustahan right now</strong>
-          <p id="priority-names">Practice Pakikipagkapwa-tao & Buber's Personal Making Present—reach out without unsolicited advice.</p>
-        </div>
+  <!-- Main App Container -->
+  <div class="app-container">
+    <!-- Top Navigation -->
+    <header class="top-nav">
+      <div class="nav-brand">
+        <div id="header-mascot" class="mini-mascot" aria-hidden="true"></div>
+        <span class="brand-name">vibecheck</span>
       </div>
-      <button id="btn-view-priority" class="btn-priority-view" type="button">View Priority</button>
-    </section>
+      
+      <nav class="nav-tabs" role="tablist">
+        <button 
+          id="tab-checkin" 
+          class="nav-tab active" 
+          role="tab" 
+          aria-selected="true"
+          aria-controls="view-checkin"
+          data-view="checkin"
+        >
+          Check In
+        </button>
+        <button 
+          id="tab-board" 
+          class="nav-tab" 
+          role="tab" 
+          aria-selected="false"
+          aria-controls="view-board"
+          data-view="board"
+        >
+          Pulse Board
+          <span id="board-badge" class="tab-badge hidden">0</span>
+          <span id="board-alert" class="tab-alert-dot hidden"></span>
+        </button>
+      </nav>
 
-    <div class="grid-layout">
-      <!-- LEFT COLUMN: 30-Second Check-In Card -->
-      <section class="card checkin-card">
-        <!-- Room Bar -->
-        <div class="room-bar">
-          <div class="room-info">
-            <span class="room-label">Room:</span>
-            <span class="room-code" id="currentRoomCode">general</span>
-          </div>
-          <div class="room-actions">
-            <button id="btn-switch-room" class="btn-room" type="button">
-              <span class="btn-icon">🚪</span>
-              Switch / New Room
+      <div class="nav-actions">
+        <button id="btn-room-menu" class="nav-pill" type="button" aria-label="Room settings">
+          <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span id="room-label">general</span>
+        </button>
+        
+        <button id="btn-profile-menu" class="nav-icon-btn" type="button" aria-label="Profile">
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </button>
+        
+        <button id="btn-sound-toggle" class="nav-icon-btn" type="button" aria-label="Toggle sound">
+          <svg id="icon-sound-on" class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          <svg id="icon-sound-off" class="icon hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          </svg>
+        </button>
+        
+        <button id="btn-about" class="nav-icon-btn" type="button" aria-label="About">
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="main-content">
+      <!-- Check In View -->
+      <section id="view-checkin" class="view active" role="tabpanel" aria-labelledby="tab-checkin">
+        <div class="view-inner">
+          <!-- Daily Prompt -->
+          <div class="prompt-header">
+            <p id="daily-prompt" class="prompt-text">Kumusta ka today, 1–5?</p>
+            <button id="btn-cycle-prompt" class="prompt-cycle-btn" type="button" aria-label="Next prompt">
+              <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="1 4 1 10 7 10"></polyline>
+                <polyline points="23 20 23 14 17 14"></polyline>
+                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+              </svg>
             </button>
-            <button id="btn-copy-invite" class="btn-room btn-invite" type="button">
-              <span class="btn-icon">📋</span>
-              Copy GC Invite Link
-            </button>
           </div>
-        </div>
 
-        <div class="card-header">
-          <div>
-            <span class="eyebrow">NO LOGIN · ZERO HIYA SPACE</span>
-            <h1 id="daily-prompt">Kumusta ka today, 1–5?</h1>
-          </div>
-          <div class="header-tools">
-            <button id="btn-cycle-prompt" class="prompt-cycle-btn" type="button" title="Switch prompt">
-              <span class="prompt-indicator" id="prompt-indicator">1/3</span>
-              Switch prompt
-            </button>
-          </div>
-        </div>
+          <!-- Radial Vibe Selector -->
+          <div class="vibe-selector">
+            <div class="radial-dial-container">
+              <svg id="radial-dial" class="radial-dial" viewBox="0 0 300 300" aria-label="Vibe level selector">
+                <!-- Background track -->
+                <circle cx="150" cy="150" r="120" fill="none" stroke="#E4E4E7" stroke-width="12" opacity="0.3"/>
+                
+                <!-- Active arc progress -->
+                <circle 
+                  id="progress-arc" 
+                  cx="150" 
+                  cy="150" 
+                  r="120" 
+                  fill="none" 
+                  stroke="#FF3B30" 
+                  stroke-width="12"
+                  stroke-linecap="round"
+                  stroke-dasharray="753.98"
+                  stroke-dashoffset="377"
+                  transform="rotate(-90 150 150)"
+                  style="transition: stroke 0.3s ease, stroke-dashoffset 0.3s ease;"
+                />
+                
+                <!-- Detent nodes (1-5) -->
+                <g id="detent-nodes">
+                  <circle data-level="1" cx="150" cy="30" r="8" fill="#FFF" stroke="#FF3B30" stroke-width="2.5" class="detent-node" />
+                  <circle data-level="2" cx="253.8" cy="89.2" r="8" fill="#FFF" stroke="#FF8A00" stroke-width="2.5" class="detent-node" />
+                  <circle data-level="3" cx="253.8" cy="210.8" r="8" fill="#FFF" stroke="#F5B800" stroke-width="2.5" class="detent-node" />
+                  <circle data-level="4" cx="150" cy="270" r="8" fill="#FFF" stroke="#34C759" stroke-width="2.5" class="detent-node" />
+                  <circle data-level="5" cx="46.2" cy="210.8" r="8" fill="#FFF" stroke="#00B8A9" stroke-width="2.5" class="detent-node" />
+                </g>
 
-        <!-- 30-Second Timer Bar -->
-        <div class="timer-bar-wrap">
-          <div class="timer-bar" id="timer-bar"></div>
-          <span class="timer-label" id="timer-label">
-            <span class="timer-icon">⏱️</span>
-            30s check-in
-          </span>
-        </div>
-
-        <!-- Reversible Octopus Mascot -->
-        <div class="mascot-stage">
-          <div id="main-mascot" class="mascot-svg-wrap octo-transition"></div>
-          <p id="mascot-caption" class="mascot-caption">
-            <span class="mascot-level" id="mascot-level">Level 3 · Sakto lang</span>
-          </p>
-        </div>
-
-        <!-- Today's Kumustahan Prompt Box -->
-        <div class="prompt-box">
-          <div class="prompt-box-header">
-            <span class="prompt-box-title">Today's Kumustahan Prompt</span>
-          </div>
-          <div class="prompt-box-text" id="prompt-box-text">"Kumusta ka today, 1–5?"</div>
-          <p class="prompt-box-subtitle">Skip the automatic "Okay lang." Step back for 30 seconds and share your honest pulse.</p>
-        </div>
-
-        <form id="checkin-form">
-          <!-- Quick Name Pills (Dynamic from Room Members) -->
-          <div class="field-group">
-            <label>1. Who's checking in?</label>
-            <div class="field-hint">Tap name or type yours</div>
-            <div class="member-pills" id="member-pills">
-              <!-- Dynamically populated from room members -->
+                <!-- Active indicator handle -->
+                <circle id="dial-handle" cx="150" cy="150" r="14" fill="#FF3B30" stroke="#FFF" stroke-width="3" style="filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15));" />
+              </svg>
+              
+              <!-- Central Mascot -->
+              <div id="central-mascot" class="central-mascot"></div>
             </div>
-            <input type="text" id="input-name" placeholder="Your name or nickname" required maxlength="32" />
+
+            <!-- Level Label -->
+            <div class="vibe-label">
+              <span id="vibe-level-num" class="level-number">3</span>
+              <span id="vibe-level-name" class="level-name">Sakto lang</span>
+              <span id="vibe-level-hint" class="level-hint">Pushing through today</span>
+            </div>
+          </div>
+
+          <!-- Check-In Form -->
+          <form id="checkin-form" class="checkin-form">
+            <!-- Profile Quick-Select Pills (from room members) -->
+            <div id="member-pills-container" class="form-section hidden">
+              <label class="form-label">Quick select</label>
+              <div id="member-pills" class="member-pills"></div>
+            </div>
+
+            <!-- Name & Role Inputs -->
+            <div class="form-row">
+              <div class="form-field">
+                <label for="input-name" class="form-label">Your name</label>
+                <input 
+                  id="input-name" 
+                  type="text" 
+                  class="form-input" 
+                  placeholder="e.g., Maria"
+                  maxlength="40"
+                  required
+                />
+              </div>
+              <div class="form-field">
+                <label for="input-role" class="form-label">Role</label>
+                <input 
+                  id="input-role" 
+                  type="text" 
+                  class="form-input" 
+                  placeholder="Student"
+                  maxlength="30"
+                />
+              </div>
+            </div>
+
+            <!-- Context Tags (Collapsible) -->
+            <details class="form-details">
+              <summary class="form-summary">Add context (optional)</summary>
+              <div class="form-details-content">
+                <div class="tag-grid">
+                  <button type="button" class="tag-chip" data-tag="Academic load">Academic load</button>
+                  <button type="button" class="tag-chip" data-tag="Low energy">Low energy</button>
+                  <button type="button" class="tag-chip" data-tag="Family stress">Family stress</button>
+                  <button type="button" class="tag-chip" data-tag="Money worries">Money worries</button>
+                  <button type="button" class="tag-chip" data-tag="Health concern">Health concern</button>
+                  <button type="button" class="tag-chip" data-tag="Open to talk">Open to talk</button>
+                  <button type="button" class="tag-chip" data-tag="Need space">Need space</button>
+                  <button type="button" class="tag-chip" data-tag="Doing well">Doing well</button>
+                </div>
+                
+                <div class="form-field">
+                  <label for="input-note" class="form-label">Note (optional)</label>
+                  <textarea 
+                    id="input-note" 
+                    class="form-textarea" 
+                    placeholder="Anything you want to share..."
+                    maxlength="110"
+                    rows="2"
+                  ></textarea>
+                  <span id="note-counter" class="char-counter">0/110</span>
+                </div>
+              </div>
+            </details>
+
+            <!-- Submit Button -->
+            <button id="btn-submit" type="submit" class="btn-primary">
+              Send Check-In
+            </button>
+
+            <!-- Sync Status -->
+            <div class="sync-status">
+              <span id="sync-status" class="sync-text">Syncing...</span>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Pulse Board View -->
+      <section id="view-board" class="view" role="tabpanel" aria-labelledby="tab-board">
+        <div class="view-inner">
+          <!-- Priority Banner -->
+          <div id="priority-banner" class="priority-banner hidden">
+            <div class="priority-content">
+              <svg class="priority-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              <div>
+                <strong id="priority-count">2 peers need support</strong>
+                <p id="priority-text">Practice pakikipagkapwa-tao: reach out without unsolicited advice.</p>
+              </div>
+            </div>
+            <button id="btn-view-priority" class="btn-priority" type="button">View</button>
+          </div>
+
+          <!-- Board Header -->
+          <div class="board-header">
+            <div class="board-stats">
+              <h2 class="board-title">Pulse Board</h2>
+              <span id="board-count" class="board-count">0 today</span>
+            </div>
             
-            <!-- Circle Selector Dropdown -->
-            <div class="circle-selector-wrap">
-              <select id="input-role" class="circle-selector">
-                <option value="3CSC · Group 2">3CSC · Group 2</option>
-                <option value="3CSC Blockmate">3CSC Blockmate</option>
-                <option value="Family / Home">Family / Home</option>
-                <option value="Close Friends">Close Friends</option>
-                <option value="Peer">Peer</option>
-              </select>
+            <div class="board-filters">
+              <button class="filter-pill active" data-filter="all" type="button">All</button>
+              <button class="filter-pill" data-filter="needs" type="button">Needs Support</button>
+              <button class="filter-pill" data-filter="doing-well" type="button">Doing Well</button>
             </div>
+            
+            <button id="btn-refresh" class="btn-icon-only" type="button" aria-label="Refresh board">
+              <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+            </button>
           </div>
 
-          <!-- 1-5 Vibe Selector -->
-          <div class="field-group">
-            <label>2. Tap your real vibe (1–5)</label>
-            <div class="field-hint" id="vibe-hint">Pushing through today</div>
-            <div class="vibe-scale" id="vibe-scale">
-              <button type="button" class="vibe-btn" data-level="1">
-                <span class="vibe-num">1</span>
-                <span class="vibe-label">Mabigat</span>
-                <span class="vibe-sublabel">Overwhelmed</span>
-              </button>
-              <button type="button" class="vibe-btn" data-level="2">
-                <span class="vibe-num">2</span>
-                <span class="vibe-label">Pagod</span>
-                <span class="vibe-sublabel">Drained</span>
-              </button>
-              <button type="button" class="vibe-btn" data-level="3">
-                <span class="vibe-num">3</span>
-                <span class="vibe-label">Sakto lang</span>
-                <span class="vibe-sublabel">Surviving</span>
-              </button>
-              <button type="button" class="vibe-btn" data-level="4">
-                <span class="vibe-num">4</span>
-                <span class="vibe-label">Maayos</span>
-                <span class="vibe-sublabel">Doing Well</span>
-              </button>
-              <button type="button" class="vibe-btn" data-level="5">
-                <span class="vibe-num">5</span>
-                <span class="vibe-label">Masaya</span>
-                <span class="vibe-sublabel">Thriving</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Quick Tags to overcome hiya -->
-          <div class="field-group">
-            <label>3. No-Filter 1-Liner (optional — break past hiya)</label>
-            <div class="field-hint">
-              <span id="note-counter">0/110</span>
-            </div>
-            <div class="tag-cloud" id="tag-cloud">
-              <button type="button" class="tag-chip" data-tag="Acads pressure 📚">Acads pressure 📚</button>
-              <button type="button" class="tag-chip" data-tag="Pagod lang 🔋">Pagod lang 🔋</button>
-              <button type="button" class="tag-chip" data-tag="Need kausap ☕">Need kausap ☕</button>
-              <button type="button" class="tag-chip" data-tag="All goods ✨">All goods ✨</button>
-            </div>
-            <textarea id="input-note" placeholder="One honest sentence (optional)..." maxlength="110" rows="2"></textarea>
-          </div>
-
-          <button type="submit" id="btn-submit" class="btn-primary">
-            <span class="btn-icon">📊</span>
-            Drop My 30-Sec Vibe Check
-          </button>
-        </form>
-      </section>
-
-      <!-- RIGHT COLUMN: Shared Pulse Board -->
-      <section class="card board-card">
-        <div class="card-header">
-          <div>
-            <span class="eyebrow">LIVE PULSE BOARD</span>
-            <h2>
-              <span id="board-count">5 today</span>
-            </h2>
-          </div>
-          <button id="btn-refresh" class="btn-ghost" type="button">
-            <span class="btn-icon">🔄</span>
-            Refresh
-          </button>
-        </div>
-
-        <p class="board-subtitle">See who is thriving and who needs a genuine, offline kumustahan.</p>
-
-        <!-- Filter Pills -->
-        <div class="filter-pills" id="filter-pills">
-          <button type="button" class="filter-pill active" data-filter="all">All</button>
-          <button type="button" class="filter-pill" data-filter="needs">Needs Kumustahan (1–2)</button>
-          <button type="button" class="filter-pill" data-filter="doing-well">Doing Well (3–5)</button>
-        </div>
-
-        <div id="pulse-list" class="pulse-list">
-          <!-- Populated dynamically by app.js -->
+          <!-- Pulse List -->
+          <div id="pulse-list" class="pulse-list"></div>
         </div>
       </section>
-    </div>
-  </main>
+    </main>
+  </div>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-content">
-      <div class="footer-brand">
-        <strong>vibecheck — A Daily 30-Second Kumustahan Web App</strong>
-        <p>University of Santo Tomas · College of Information and Computing Sciences · 3CSC Group 2 (026.26.ETHICS)</p>
+  <!-- Room Menu Modal -->
+  <div id="room-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Room Settings</h3>
+        <button id="close-room-modal" class="modal-close-btn" type="button" aria-label="Close">
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
       </div>
-      <button id="btn-reset-sample" class="btn-ghost btn-sm" type="button">Reset sample board</button>
+      <div class="modal-body">
+        <div class="modal-section">
+          <label class="form-label">Current room</label>
+          <div class="room-current">
+            <code id="current-room-code">general</code>
+            <button id="btn-copy-invite" class="btn-secondary-sm" type="button">
+              <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              Copy Invite Link
+            </button>
+          </div>
+        </div>
+        
+        <div class="modal-section">
+          <label for="input-room-code" class="form-label">Switch or create room</label>
+          <div class="room-switch-input">
+            <input 
+              id="input-room-code" 
+              type="text" 
+              class="form-input" 
+              placeholder="Enter room code..."
+              maxlength="50"
+            />
+            <button id="btn-join-room" class="btn-primary-sm" type="button">Join</button>
+          </div>
+          <p class="form-hint">Share the same room code with your group to see each other's check-ins.</p>
+        </div>
+      </div>
     </div>
-  </footer>
+  </div>
+
+  <!-- Profile Menu Modal -->
+  <div id="profile-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Your Profile</h3>
+        <button id="close-profile-modal" class="modal-close-btn" type="button" aria-label="Close">
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-field">
+          <label for="profile-name" class="form-label">Name</label>
+          <input 
+            id="profile-name" 
+            type="text" 
+            class="form-input" 
+            placeholder="Your name"
+            maxlength="40"
+          />
+        </div>
+        <div class="form-field">
+          <label for="profile-role" class="form-label">Role</label>
+          <input 
+            id="profile-role" 
+            type="text" 
+            class="form-input" 
+            placeholder="Student, Teacher, etc."
+            maxlength="30"
+          />
+        </div>
+        <button id="btn-save-profile" class="btn-primary" type="button">Save Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kumustahan Modal -->
+  <div id="reachout-modal" class="modal-backdrop hidden">
+    <div class="modal-card modal-large">
+      <div class="modal-header">
+        <div>
+          <h3 id="modal-peer-title" class="modal-title">Kumusta si Maria</h3>
+          <p id="modal-peer-level" class="modal-subtitle">Level 2 · Pagod / Drained</p>
+        </div>
+        <button id="close-reachout" class="modal-close-btn" type="button" aria-label="Close">
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-section">
+          <label class="form-label">Context</label>
+          <p id="modal-peer-context" class="peer-context">"Struggling with midterm workload"</p>
+        </div>
+        
+        <div class="modal-section">
+          <div class="icebreaker-header">
+            <label class="form-label">Suggested messages</label>
+            <button id="btn-switch-icebreaker" class="btn-text" type="button">
+              <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="1 4 1 10 7 10"></polyline>
+                <polyline points="23 20 23 14 17 14"></polyline>
+                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+              </svg>
+              Show more
+            </button>
+          </div>
+          <div id="icebreaker-list" class="icebreaker-list"></div>
+        </div>
+        
+        <div class="modal-actions">
+          <button id="btn-copy-message" class="btn-secondary" type="button">
+            <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Copy Message
+          </button>
+          <button id="btn-log-kumustahan" class="btn-primary" type="button">
+            Log Kumustahan
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- About / Ethics Modal -->
+  <div id="ethics-modal" class="modal-backdrop hidden">
+    <div class="modal-card modal-large">
+      <div class="modal-header">
+        <h3 class="modal-title">Why Vibecheck?</h3>
+        <button id="close-ethics" class="modal-close-btn" type="button" aria-label="Close">
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="ethics-content">
+          <section class="ethics-section">
+            <h4>Breaking Past "Okay Lang"</h4>
+            <p>In Filipino culture, we often default to "Okay lang" even when we're struggling. Vibecheck creates a low-friction space to share honest check-ins beyond surface pleasantries.</p>
+          </section>
+          
+          <section class="ethics-section">
+            <h4>Pakikipagkapwa-tao</h4>
+            <p>Treating others with shared inner humanity. When someone checks in at Level 1–2, we practice genuine presence: reaching out to listen, not to fix or give unsolicited advice.</p>
+          </section>
+          
+          <section class="ethics-section">
+            <h4>Hiya & Kapwa</h4>
+            <p>We balance hiya (appropriate sensitivity) with kapwa (shared identity). This tool helps overcome the shame of asking for help by making vulnerability visible and normalized.</p>
+          </section>
+          
+          <section class="ethics-section">
+            <h4>30-Second Friction-Free Design</h4>
+            <p>No accounts. No emails. Just honest daily check-ins. The 30-second timer encourages quick, authentic responses rather than overthinking.</p>
+          </section>
+          
+          <section class="ethics-section">
+            <h4>Data & Privacy</h4>
+            <p>Check-ins are stored temporarily in Upstash Redis and scoped to your room. No tracking, no selling data. You can create private rooms for trusted groups.</p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Toast Notification -->
-  <div id="toast-notification" class="toast-notification hidden">
-    <span class="toast-icon">👋</span>
-    <span class="toast-message">Sent Apir!</span>
-  </div>
-
-  <!-- Room Switch Modal -->
-  <div id="room-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-    <div class="modal-card">
-      <div class="modal-header">
-        <div>
-          <span class="modal-icon">🚪</span>
-          <h3>Switch or Create Room</h3>
-        </div>
-        <button id="close-room-modal" class="icon-btn" type="button">✕</button>
-      </div>
-      
-      <div class="modal-section">
-        <p style="margin-bottom: 1rem; color: #3F3F46;">Enter a room code to join an existing room or create a new one. Share the invite link with your group!</p>
-        
-        <label class="modal-label">Room Code (lowercase, letters, numbers, hyphens only)</label>
-        <input type="text" id="input-room-code" placeholder="e.g., 3csc-group2, family-gc, friends" maxlength="50" style="margin-bottom: 1rem;" />
-        
-        <div class="modal-actions" style="grid-template-columns: 1fr; border-top: none; padding-top: 0; margin-top: 0;">
-          <button id="btn-join-room" class="btn-modal-action" type="button">
-            <span class="btn-icon">✓</span>
-            Join / Create Room
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Kumustahan Reach-Out Modal -->
-  <div id="reachout-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-    <div class="modal-card">
-      <div class="modal-header">
-        <div>
-          <span class="modal-icon">🤝</span>
-          <h3 id="modal-peer-title">Kumustahin si Peer</h3>
-          <p class="modal-level" id="modal-peer-level">Level 1 · Mabigat / Overwhelmed</p>
-        </div>
-        <button id="close-reachout" class="icon-btn" type="button">✕</button>
-      </div>
-      
-      <div class="modal-section">
-        <div class="modal-section-title">Their honest pulse note</div>
-        <p id="modal-peer-context" class="modal-pulse-note"></p>
-      </div>
-
-      <div class="modal-section">
-        <div class="modal-section-title">Ethical Encounter Checklist (Buber & Pakikipagkapwa-tao)</div>
-        <ul class="ethics-checklist">
-          <li>✓ <strong>Personal Making Present:</strong> Approach them as a whole person, not a problem to fix. Listen without immediately imposing unsolicited advice.</li>
-          <li>✓ <strong>Confirmation & Unfolding:</strong> Affirm that it's okay not to be "Okay lang." Let their real feelings unfold safely.</li>
-        </ul>
-      </div>
-
-      <div class="modal-section">
-        <div class="modal-section-header">
-          <span class="modal-section-title">1-Click Kumustahan Starter (Copy & Send via Messenger/IG/SMS)</span>
-          <button id="btn-switch-icebreaker" class="btn-text-link" type="button">Try another phrasing</button>
-        </div>
-        <div id="icebreaker-list" class="icebreaker-list"></div>
-      </div>
-
-      <div class="modal-actions">
-        <button id="btn-copy-message" class="btn-modal-action" type="button">
-          <span class="btn-icon">📋</span>
-          Copy Message
-        </button>
-        <button id="btn-log-kumustahan" class="btn-modal-action btn-modal-secondary" type="button">
-          ✓ Log Kumustahan Initiated
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Why Vibe Check Philosophical Modal -->
-  <div id="ethics-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-    <div class="modal-card modal-card-large">
-      <div class="modal-header">
-        <div>
-          <span class="eyebrow">UST CICS · 026.26.ETHICS PROPOSAL</span>
-          <h3>Why "vibecheck"? Philosophical Grounding</h3>
-        </div>
-        <button id="close-ethics" class="icon-btn" type="button">✕</button>
-      </div>
-      
-      <div class="ethics-intro">
-        <strong>The Everyday Problem:</strong>
-        <p>Bound by propriety (hiya) and passive resiliency, students routinely default to saying "Okay lang" ("I am fine") in noisy group chats—suffering in isolation while projecting a fabricated image of wellness.</p>
-      </div>
-
-      <div class="ethics-frameworks">
-        <div class="ethics-framework">
-          <div class="framework-header">
-            <span class="framework-number">1.</span>
-            <div>
-              <strong>Martin Buber</strong>
-              <div class="framework-subtitle">The Elements of the Interhuman</div>
-            </div>
-          </div>
-          <p>Dismantles "Seeming" (false "I'm fine" image) in favor of "Being". Reaching out to a struggling peer practices Personal Making Present and Confirmation—allowing genuine Unfolding without judgment.</p>
-        </div>
-
-        <div class="ethics-framework">
-          <div class="framework-header">
-            <span class="framework-number">2.</span>
-            <div>
-              <strong>Filipino Ethics</strong>
-              <div class="framework-subtitle">Pakikipagkapwa-tao vs. Pakikisama</div>
-            </div>
-          </div>
-          <p>Moves beyond mere outward conformity (pakikisama) to true pakikipagkapwa-tao—transforming hiya and kanya-kanya syndrome into active solidarity.</p>
-        </div>
-
-        <div class="ethics-framework">
-          <div class="framework-header">
-            <span class="framework-number">3.</span>
-            <div>
-              <strong>Vessels (1998)</strong>
-              <div class="framework-subtitle">Four Ethical Components</div>
-            </div>
-          </div>
-          <p>Sharpens Ethical Sensitivity (noticing distress), guides Ethical Judgment & Motivation (prioritizing human welfare), and culminates in Ethical Action (initiating an offline kumustahan).</p>
-        </div>
-
-        <div class="ethics-framework">
-          <div class="framework-header">
-            <span class="framework-number">4.</span>
-            <div>
-              <strong>Kavanaugh, Aguas & Scheler</strong>
-              <div class="framework-subtitle">Reflective Morality & Freedom</div>
-            </div>
-          </div>
-          <p>Exercises Kavanaugh's Power of Distance to elevate automatic greetings from Customary Morality into a deliberate Human Act (Aguas), honoring Scheler's Spiritual Values.</p>
-        </div>
-      </div>
-
-      <div class="ethics-footer">
-        <p><strong>3CSC Group 2:</strong> Buenafe, Fian, Ilano, Pangan</p>
-        <button id="btn-back-ethics" class="btn-ghost" type="button">Back to Check-In</button>
-      </div>
-    </div>
+  <div id="toast" class="toast hidden">
+    <svg class="toast-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+    <span id="toast-message" class="toast-message">Action completed</span>
   </div>
 
   <script src="/app.js"></script>
