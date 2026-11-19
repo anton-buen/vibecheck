@@ -103,9 +103,13 @@ const SoundFX = {
   },
   
   updateUI() {
+    if (this.enabled) {
+      document.body.classList.remove('sound-off');
+    } else {
+      document.body.classList.add('sound-off');
+    }
     const btn = document.getElementById('btn-sound-toggle');
     if (btn) {
-      btn.classList.toggle('sound-off', !this.enabled);
       btn.title = this.enabled ? 'Mute Sound' : 'Unmute Sound';
     }
   }
@@ -246,7 +250,7 @@ const DarkMode = {
     const saved = localStorage.getItem('vibecheck_theme');
     
     if (saved === 'dark') {
-      document.documentElement.classList.add('dark-mode');
+      document.body.classList.add('dark-mode');
     }
     // Light mode is the default, no need to add a class
     
@@ -254,13 +258,13 @@ const DarkMode = {
   },
   
   toggle() {
-    const isDark = document.documentElement.classList.contains('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
     
     if (isDark) {
-      document.documentElement.classList.remove('dark-mode');
+      document.body.classList.remove('dark-mode');
       localStorage.setItem('vibecheck_theme', 'light');
     } else {
-      document.documentElement.classList.add('dark-mode');
+      document.body.classList.add('dark-mode');
       localStorage.setItem('vibecheck_theme', 'dark');
     }
     
@@ -270,7 +274,7 @@ const DarkMode = {
   
   updateUI() {
     const btn = document.getElementById('btn-theme-toggle');
-    const isDark = document.documentElement.classList.contains('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
     if (btn) {
       btn.title = isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
     }
