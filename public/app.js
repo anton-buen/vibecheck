@@ -55,46 +55,8 @@ let currentIcebreakerIndex = 0;
 
 // ========== Octopus SVG Renderer ==========
 function renderAngryOctopusLogo() {
-  // Static angry octopus logo (matches favicon)
-  return `
-    <svg viewBox="0 0 100 100" width="100%" height="100%">
-      <!-- Tentacles -->
-      <ellipse cx="22" cy="75" rx="12" ry="6" fill="#FF6B6B" stroke="#D32F2F" stroke-width="1.5"/>
-      <ellipse cx="78" cy="75" rx="12" ry="6" fill="#FF6B6B" stroke="#D32F2F" stroke-width="1.5"/>
-      <ellipse cx="36" cy="82" rx="11" ry="6" fill="#FF6B6B" stroke="#D32F2F" stroke-width="1.5"/>
-      <ellipse cx="64" cy="82" rx="11" ry="6" fill="#FF6B6B" stroke="#D32F2F" stroke-width="1.5"/>
-      <ellipse cx="50" cy="85" rx="11" ry="6" fill="#FF6B6B" stroke="#D32F2F" stroke-width="1.5"/>
-      
-      <!-- Tentacle stripes -->
-      <ellipse cx="22" cy="77" rx="9" ry="2.5" fill="#E0E0E0" opacity="0.5"/>
-      <ellipse cx="78" cy="77" rx="9" ry="2.5" fill="#E0E0E0" opacity="0.5"/>
-      <ellipse cx="36" cy="84" rx="8" ry="2.5" fill="#E0E0E0" opacity="0.5"/>
-      <ellipse cx="64" cy="84" rx="8" ry="2.5" fill="#E0E0E0" opacity="0.5"/>
-      <ellipse cx="50" cy="87" rx="8" ry="2.5" fill="#E0E0E0" opacity="0.5"/>
-      
-      <!-- Dome Head -->
-      <path d="M24 68 C24 35, 76 35, 76 68 C76 75, 24 75, 24 68 Z" fill="#FF6B6B" stroke="#D32F2F" stroke-width="1.8"/>
-      
-      <!-- Highlight spiral -->
-      <circle cx="42" cy="42" r="5" fill="rgba(255, 255, 255, 0.3)"/>
-      <path d="M 42 42 Q 44 40, 46 42 Q 48 44, 46 46" stroke="rgba(255, 255, 255, 0.4)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-      
-      <!-- Eyes (angry) -->
-      <ellipse cx="41" cy="55" rx="6" ry="8" fill="#000000"/>
-      <ellipse cx="59" cy="55" rx="6" ry="8" fill="#000000"/>
-      
-      <!-- Eye whites -->
-      <circle cx="42.5" cy="53" r="2" fill="#FFFFFF"/>
-      <circle cx="60.5" cy="53" r="2" fill="#FFFFFF"/>
-      
-      <!-- Angry eyebrows -->
-      <path d="M 35 48 L 45 52" stroke="#000000" stroke-width="2.5" stroke-linecap="round"/>
-      <path d="M 65 48 L 55 52" stroke="#000000" stroke-width="2.5" stroke-linecap="round"/>
-      
-      <!-- Angry frown -->
-      <path d="M 43 64 Q 50 60 57 64" stroke="#000000" stroke-width="2" fill="none" stroke-linecap="round"/>
-    </svg>
-  `;
+  // Use the actual uploaded favicon
+  return '<img src="/favicon.svg" alt="Vibecheck Octopus" style="width: 100%; height: 100%;">';
 }
 
 function renderOctopusSVG(level = 3) {
@@ -262,7 +224,7 @@ function renderBoard() {
       return `
         <div class="pulse-item ${needsCare ? "needs-care" : ""}" data-level="${p.level}">
           <div class="pulse-left">
-            <div class="pulse-avatar">${renderOctopusSVG(p.level)}</div>
+            <div class="pulse-avatar"><img src="/favicon.svg" alt="Octopus ${p.level}" style="width: 100%; height: 100%;"></div>
             <div class="pulse-meta">
               <h3>
                 ${escapeHtml(p.name)}
