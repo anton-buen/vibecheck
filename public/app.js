@@ -5,6 +5,140 @@ const PROMPTS = [
   'Beyond "Okay lang" — how is your energy right now?',
 ];
 
+const OCTO_MOOD_THEMES = {
+  1: {
+    // Exact match to favicon_vibecheck.jpg (Coral Red, Angry/Heavy)
+    bodyMain: '#F44336',
+    bodyDark: '#D32F2F',
+    bodyLight: '#FF7961',
+    rimColor: '#B0BEC5',
+    brows: `<path d="M92,102 L122,113" stroke="#111111" stroke-width="5.5" stroke-linecap="round"/>
+            <path d="M188,101 L162,113" stroke="#111111" stroke-width="5.5" stroke-linecap="round"/>`,
+    eyes: `<ellipse cx="108" cy="121" rx="11" ry="13.5" fill="#111111"/>
+           <circle cx="112" cy="115" r="3.8" fill="#FFFFFF"/>
+           <ellipse cx="174" cy="120" rx="10" ry="13" fill="#111111"/>
+           <circle cx="177" cy="114" r="3.5" fill="#FFFFFF"/>`,
+    mouth: `<path d="M136,144 C138,133 149,133 151,144" fill="none" stroke="#111111" stroke-width="4.5" stroke-linecap="round"/>`,
+    cheeks: ''
+  },
+  2: {
+    // Warm Orange, Tired/Drained
+    bodyMain: '#FB8C00',
+    bodyDark: '#E65100',
+    bodyLight: '#FFB74D',
+    rimColor: '#CFD8DC',
+    brows: `<path d="M93,109 L121,102" stroke="#111111" stroke-width="5" stroke-linecap="round"/>
+            <path d="M187,108 L163,102" stroke="#111111" stroke-width="5" stroke-linecap="round"/>`,
+    eyes: `<ellipse cx="108" cy="121" rx="11" ry="13" fill="#111111"/>
+           <circle cx="112" cy="115" r="3.8" fill="#FFFFFF"/>
+           <ellipse cx="174" cy="120" rx="10" ry="12.5" fill="#111111"/>
+           <circle cx="177" cy="114" r="3.5" fill="#FFFFFF"/>`,
+    mouth: `<path d="M135,143 Q143.5,136 152,143" fill="none" stroke="#111111" stroke-width="4.5" stroke-linecap="round"/>`,
+    cheeks: ''
+  },
+  3: {
+    // Golden Amber, Neutral / Sakto lang
+    bodyMain: '#FBC02D',
+    bodyDark: '#F57F17',
+    bodyLight: '#FFF176',
+    rimColor: '#CFD8DC',
+    brows: `<path d="M95,104 Q108,102 120,104" fill="none" stroke="#111111" stroke-width="4.8" stroke-linecap="round"/>
+            <path d="M164,104 Q175,102 186,104" fill="none" stroke="#111111" stroke-width="4.8" stroke-linecap="round"/>`,
+    eyes: `<ellipse cx="108" cy="121" rx="11" ry="13" fill="#111111"/>
+           <circle cx="112" cy="115" r="3.8" fill="#FFFFFF"/>
+           <ellipse cx="174" cy="120" rx="10" ry="12.5" fill="#111111"/>
+           <circle cx="177" cy="114" r="3.5" fill="#FFFFFF"/>`,
+    mouth: `<line x1="136" y1="140" x2="152" y2="140" stroke="#111111" stroke-width="4.5" stroke-linecap="round"/>`,
+    cheeks: `<ellipse cx="90" cy="134" rx="8" ry="4.5" fill="#F43F5E" opacity="0.22"/>
+             <ellipse cx="189" cy="132" rx="7.5" ry="4.2" fill="#F43F5E" opacity="0.22"/>`
+  },
+  4: {
+    // Fresh Green, Calm / Maayos
+    bodyMain: '#2EBD59',
+    bodyDark: '#1B8A3D',
+    bodyLight: '#69F0AE',
+    rimColor: '#CFD8DC',
+    brows: `<path d="M95,102 Q108,97 120,102" fill="none" stroke="#111111" stroke-width="4.8" stroke-linecap="round"/>
+            <path d="M164,102 Q175,97 186,102" fill="none" stroke="#111111" stroke-width="4.8" stroke-linecap="round"/>`,
+    eyes: `<ellipse cx="108" cy="121" rx="11" ry="13" fill="#111111"/>
+           <circle cx="112" cy="115" r="3.8" fill="#FFFFFF"/>
+           <ellipse cx="174" cy="120" rx="10" ry="12.5" fill="#111111"/>
+           <circle cx="177" cy="114" r="3.5" fill="#FFFFFF"/>`,
+    mouth: `<path d="M134,137 Q143.5,147 153,137" fill="none" stroke="#111111" stroke-width="4.5" stroke-linecap="round"/>`,
+    cheeks: `<ellipse cx="90" cy="134" rx="8.5" ry="4.8" fill="#F43F5E" opacity="0.35"/>
+             <ellipse cx="189" cy="132" rx="8" ry="4.5" fill="#F43F5E" opacity="0.35"/>`
+  },
+  5: {
+    // Vibrant Teal, Happy / Masaya
+    bodyMain: '#14B8A6',
+    bodyDark: '#0F766E',
+    bodyLight: '#5EEAD4',
+    rimColor: '#CFD8DC',
+    brows: `<path d="M94,99 Q108,93 120,99" fill="none" stroke="#111111" stroke-width="4.8" stroke-linecap="round"/>
+            <path d="M164,99 Q175,93 186,99" fill="none" stroke="#111111" stroke-width="4.8" stroke-linecap="round"/>`,
+    eyes: `<ellipse cx="108" cy="120" rx="11.5" ry="13.5" fill="#111111"/>
+           <circle cx="112" cy="114" r="4" fill="#FFFFFF"/>
+           <ellipse cx="174" cy="119" rx="10.5" ry="13" fill="#111111"/>
+           <circle cx="177" cy="113" r="3.8" fill="#FFFFFF"/>`,
+    mouth: `<path d="M132,135 Q143.5,152 155,135 Z" fill="#111111" stroke="#111111" stroke-width="2.5" stroke-linejoin="round"/>
+            <path d="M137,142 Q143.5,148 150,142" fill="#FF6B8B"/>`,
+    cheeks: `<ellipse cx="90" cy="134" rx="9.5" ry="5.2" fill="#F43F5E" opacity="0.5"/>
+             <ellipse cx="189" cy="132" rx="9" ry="5" fill="#F43F5E" opacity="0.5"/>`
+  }
+};
+
+function renderBrandOctopusSvg(level = 1, sizeClass = 'w-28 h-24') {
+  const t = OCTO_MOOD_THEMES[level] || OCTO_MOOD_THEMES[1];
+  const uid = `octo-${level}-${Math.random().toString(36).slice(2, 6)}`;
+
+  return `
+    <svg viewBox="0 0 260 220" class="${sizeClass} select-none" aria-label="vibecheck mascot level ${level}">
+      <defs>
+        <radialGradient id="${uid}-dome" cx="38%" cy="28%" r="70%">
+          <stop offset="0%" stop-color="${t.bodyLight}" />
+          <stop offset="45%" stop-color="${t.bodyMain}" />
+          <stop offset="100%" stop-color="${t.bodyDark}" />
+        </radialGradient>
+      </defs>
+
+      <!-- Back-Left Tentacle + Grey Underside Rim -->
+      <path d="M52,142 C18,144 10,162 24,171 C38,179 62,171 76,161 Z" fill="${t.bodyDark}"/>
+      <path d="M16,163 C22,173 46,174 68,163 L64,157 C45,166 25,165 18,158 Z" fill="${t.rimColor}"/>
+
+      <!-- Back-Right Tentacle + Grey Underside Rim -->
+      <path d="M196,138 C232,140 246,156 232,167 C218,177 192,169 178,158 Z" fill="${t.bodyDark}"/>
+      <path d="M238,159 C232,169 208,171 186,160 L190,154 C209,163 229,162 236,154 Z" fill="${t.rimColor}"/>
+
+      <!-- Main Smooth Dome Head -->
+      <path d="M46,144 C44,72 82,34 134,34 C186,34 212,74 208,140 C206,156 174,164 132,164 C86,164 48,158 46,144 Z" fill="url(#${uid}-dome)"/>
+
+      <!-- Left Gloss Highlight Arc -->
+      <path d="M56,134 C54,82 80,48 122,44" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" opacity="0.28"/>
+
+      <!-- Top Swirl Spiral -->
+      <path d="M134,47 C138,44 146,46 146,51 C146,56 136,58 129,55 C121,52 122,43 133,41 C145,39 156,45 154,53" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.45"/>
+
+      <!-- Front-Left Tentacle + Grey Underside Rim -->
+      <path d="M74,152 C52,168 58,187 78,186 C95,185 104,171 108,159 Z" fill="${t.bodyMain}"/>
+      <path d="M58,176 C64,187 86,188 102,174 L97,169 C84,180 67,180 61,171 Z" fill="${t.rimColor}"/>
+
+      <!-- Front-Right Tentacle + Grey Underside Rim -->
+      <path d="M168,151 C192,166 196,184 176,185 C158,186 146,172 142,159 Z" fill="${t.bodyMain}"/>
+      <path d="M192,175 C186,186 164,187 148,173 L153,168 C166,179 183,179 189,170 Z" fill="${t.rimColor}"/>
+
+      <!-- Front-Center Tentacle + Grey Underside Rim -->
+      <path d="M107,158 C96,181 106,199 127,199 C148,199 156,181 144,158 Z" fill="${t.bodyMain}"/>
+      <path d="M101,185 C108,199 144,199 151,185 L145,181 C139,192 113,192 107,181 Z" fill="${t.rimColor}"/>
+
+      <!-- Facial Features (Cheeks, Eyes, Brows, Mouth) -->
+      ${t.cheeks}
+      ${t.eyes}
+      ${t.brows}
+      ${t.mouth}
+    </svg>
+  `;
+}
+
 const VIBE_CONFIG = {
   1: {
     color: "#FF3B30",
@@ -53,65 +187,7 @@ let secondsLeft = 30;
 let timerInterval = null;
 let currentIcebreakerIndex = 0;
 
-// ========== Octopus SVG Renderer ==========
-function renderAngryOctopusLogo() {
-  // Use the actual uploaded favicon
-  return '<img src="/favicon.svg" alt="Vibecheck Octopus" style="width: 100%; height: 100%;">';
-}
-
-function renderOctopusSVG(level = 3) {
-  const cfg = VIBE_CONFIG[level] || VIBE_CONFIG[3];
-  let brows = "";
-  let mouth = "";
-  let cheeks = "";
-
-  if (level === 1) {
-    // Sad/overwhelmed: angled down eyebrows, frown
-    brows = '<path d="M36 42 L45 46 M64 42 L55 46" stroke="#18181B" stroke-width="3" stroke-linecap="round"/>';
-    mouth = '<path d="M46 58 Q50 53 54 58" stroke="#18181B" stroke-width="2.6" fill="none" stroke-linecap="round"/>';
-    cheeks = '<ellipse cx="35" cy="54" rx="4" ry="2.5" fill="rgba(255, 59, 48, 0.2)"/><ellipse cx="65" cy="54" rx="4" ry="2.5" fill="rgba(255, 59, 48, 0.2)"/>';
-  } else if (level === 2) {
-    // Tired: slightly worried brows, flat mouth
-    brows = '<path d="M36 45 L44 43 M64 45 L56 43" stroke="#18181B" stroke-width="2.6" stroke-linecap="round"/>';
-    mouth = '<path d="M46 57 Q50 55 54 57" stroke="#18181B" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
-    cheeks = '<ellipse cx="35" cy="54" rx="3.5" ry="2" fill="rgba(255, 138, 0, 0.15)"/><ellipse cx="65" cy="54" rx="3.5" ry="2" fill="rgba(255, 138, 0, 0.15)"/>';
-  } else if (level === 3) {
-    // Neutral: straight line mouth
-    mouth = '<line x1="46" y1="56" x2="54" y2="56" stroke="#18181B" stroke-width="2.6" stroke-linecap="round"/>';
-  } else if (level === 4) {
-    // Happy: gentle smile
-    mouth = '<path d="M45 54 Q50 59 55 54" stroke="#18181B" stroke-width="2.6" fill="none" stroke-linecap="round"/>';
-    cheeks = '<ellipse cx="35" cy="54" rx="4" ry="2.5" fill="rgba(52, 199, 89, 0.2)"/><ellipse cx="65" cy="54" rx="4" ry="2.5" fill="rgba(52, 199, 89, 0.2)"/>';
-  } else {
-    // Very happy: excited brows, big smile
-    brows = '<path d="M37 42 Q41 39 44 42 M56 42 Q59 39 63 42" stroke="#18181B" stroke-width="2.4" fill="none" stroke-linecap="round"/>';
-    mouth = '<path d="M44 53 Q50 62 56 53" stroke="#18181B" stroke-width="2.8" fill="none" stroke-linecap="round"/>';
-    cheeks = '<ellipse cx="34" cy="54" rx="5" ry="3" fill="rgba(0, 184, 169, 0.25)"/><ellipse cx="66" cy="54" rx="5" ry="3" fill="rgba(0, 184, 169, 0.25)"/>';
-  }
-
-  return `
-    <svg viewBox="0 0 100 86" width="100%" height="100%">
-      <!-- Tentacles -->
-      <ellipse cx="22" cy="68" rx="12" ry="6" fill="${cfg.color}" stroke="${cfg.dark}" stroke-width="2"/>
-      <ellipse cx="78" cy="68" rx="12" ry="6" fill="${cfg.color}" stroke="${cfg.dark}" stroke-width="2"/>
-      <ellipse cx="36" cy="74" rx="11" ry="6" fill="${cfg.color}" stroke="${cfg.dark}" stroke-width="2"/>
-      <ellipse cx="64" cy="74" rx="11" ry="6" fill="${cfg.color}" stroke="${cfg.dark}" stroke-width="2"/>
-      <ellipse cx="50" cy="76" rx="11" ry="6" fill="${cfg.color}" stroke="${cfg.dark}" stroke-width="2"/>
-      <!-- Dome Head -->
-      <path d="M24 62 C24 30, 76 30, 76 62 C76 68, 24 68, 24 62 Z" fill="${cfg.color}" stroke="${cfg.dark}" stroke-width="2.2"/>
-      <!-- Highlight -->
-      <ellipse cx="42" cy="36" rx="8" ry="3.5" fill="rgba(255,255,255,0.4)" transform="rotate(-18 42 36)"/>
-      <!-- Eyes -->
-      <circle cx="41" cy="50" r="3.8" fill="#18181B"/>
-      <circle cx="59" cy="50" r="3.8" fill="#18181B"/>
-      <circle cx="40" cy="49" r="1.3" fill="#FFF"/>
-      <circle cx="58" cy="49" r="1.3" fill="#FFF"/>
-      ${brows}
-      ${cheeks}
-      ${mouth}
-    </svg>
-  `;
-}
+// ========== Unified Brand Octopus (Already defined above with OCTO_MOOD_THEMES) ==========
 
 // ========== API Integration ==========
 async function loadPulses() {
@@ -224,7 +300,7 @@ function renderBoard() {
       return `
         <div class="pulse-item ${needsCare ? "needs-care" : ""}" data-level="${p.level}">
           <div class="pulse-left">
-            <div class="pulse-avatar"><img src="/favicon.svg" alt="Octopus ${p.level}" style="width: 100%; height: 100%;"></div>
+            <div class="pulse-avatar">${renderBrandOctopusSvg(p.level, 'w-10 h-9')}</div>
             <div class="pulse-meta">
               <h3>
                 ${escapeHtml(p.name)}
@@ -268,7 +344,7 @@ function updatePriorityBanner() {
 
 function updateMascotDisplay(level) {
   const cfg = VIBE_CONFIG[level];
-  document.getElementById("main-mascot").innerHTML = renderOctopusSVG(level);
+  document.getElementById("main-mascot").innerHTML = renderBrandOctopusSvg(level, 'w-28 h-24 octo-float');
   document.getElementById("mascot-level").textContent = `Level ${level} · ${cfg.label}`;
   document.getElementById("vibe-hint").textContent = cfg.hint;
 }
@@ -399,9 +475,9 @@ function hexToRgb(hex) {
 
 // ========== Initialization ==========
 document.addEventListener("DOMContentLoaded", () => {
-  // Render initial mascots
-  document.getElementById("header-mascot").innerHTML = renderAngryOctopusLogo();
-  document.getElementById("main-mascot").innerHTML = renderOctopusSVG(selectedLevel);
+  // Render initial mascots with unified brand octopus
+  document.getElementById("header-mascot").innerHTML = renderBrandOctopusSvg(1, 'w-9 h-8');
+  document.getElementById("main-mascot").innerHTML = renderBrandOctopusSvg(selectedLevel, 'w-28 h-24 octo-float');
 
   // Start timer on first interaction
   document.getElementById("checkin-form").addEventListener("focus", startTimer, { once: true, capture: true });
