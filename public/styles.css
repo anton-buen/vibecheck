@@ -29,7 +29,7 @@
   --vibe-4: #2EBD59;
   --vibe-5: #14B8A6;
   
-  /* Semantic (Light Mode) */
+  /* Semantic (Light Mode Default) */
   --bg-primary: #FFFFFF;
   --bg-secondary: var(--gray-50);
   --border: var(--gray-200);
@@ -45,35 +45,20 @@
   --shadow-lg: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
 }
 
-/* Dark Mode */
+/* Dark Mode - Cleaner Grays (Not Pure Black) */
 .dark-mode {
-  /* Dark Mode Palette */
-  --bg-primary: #18181B;
-  --bg-secondary: #09090B;
-  --border: #27272A;
-  --text-primary: #F4F4F5;
-  --text-secondary: #A1A1AA;
-  --text-muted: #71717A;
+  /* Softer dark palette using zinc/slate tones */
+  --bg-primary: #1E1E1E;    /* Soft charcoal instead of #18181B */
+  --bg-secondary: #151515;  /* Subtle darker shade instead of #09090B */
+  --border: #2A2A2A;        /* Visible borders instead of #27272A */
+  --text-primary: #E8E8E8;  /* Slightly softer white instead of #F4F4F5 */
+  --text-secondary: #A0A0A0; /* Softer gray instead of #A1A1AA */
+  --text-muted: #707070;    /* Muted but readable instead of #71717A */
   
-  /* Elevated shadows for dark mode */
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.5);
-  --shadow: 0 1px 3px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.5);
-  --shadow-lg: 0 4px 6px rgba(0,0,0,0.7), 0 2px 4px rgba(0,0,0,0.6);
-}
-
-/* Respect system preference on first load */
-@media (prefers-color-scheme: dark) {
-  :root:not(.light-mode) {
-    --bg-primary: #18181B;
-    --bg-secondary: #09090B;
-    --border: #27272A;
-    --text-primary: #F4F4F5;
-    --text-secondary: #A1A1AA;
-    --text-muted: #71717A;
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.5);
-    --shadow: 0 1px 3px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.5);
-    --shadow-lg: 0 4px 6px rgba(0,0,0,0.7), 0 2px 4px rgba(0,0,0,0.6);
-  }
+  /* Softer shadows for dark mode */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow: 0 2px 4px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-lg: 0 4px 8px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.4);
 }
 
 body {

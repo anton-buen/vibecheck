@@ -134,8 +134,10 @@ function initChaoticLoadingScreen() {
 
   // SUPER BOUNCY physics parameters
   const octopusSize = 120;
-  let x = window.innerWidth / 2;
-  let y = window.innerHeight / 2;
+  
+  // Start in center of viewport
+  let x = (window.innerWidth - octopusSize) / 2;
+  let y = (window.innerHeight - octopusSize) / 2;
   let velocityX = (Math.random() - 0.5) * 25;
   let velocityY = (Math.random() - 0.5) * 25;
   let rotation = 0;
@@ -148,6 +150,10 @@ function initChaoticLoadingScreen() {
   const maxSpeed = 30;
 
   function animateOctopus() {
+    // Get current viewport bounds
+    const maxX = window.innerWidth - octopusSize;
+    const maxY = window.innerHeight - octopusSize;
+    
     velocityX += (Math.random() - 0.5) * chaosWobble * 20;
     velocityY += (Math.random() - 0.5) * chaosWobble * 20;
     velocityY += gravity;
@@ -168,30 +174,32 @@ function initChaoticLoadingScreen() {
     rotationSpeed *= 0.985;
     rotationSpeed += (Math.random() - 0.5) * 1.5;
     
-    // Strict viewport clamping to prevent off-screen
-    const maxX = window.innerWidth - octopusSize;
-    const maxY = window.innerHeight - octopusSize;
-    
-    // Left/Right walls with clamping
-    if (x <= 0) {
+    // Left wall collision
+    if (x < 0) {
       x = 0;
       velocityX = Math.abs(velocityX) * bounce;
       velocityY += (Math.random() - 0.5) * 8;
       rotationSpeed = -rotationSpeed * 1.8 + (Math.random() - 0.5) * 10;
-    } else if (x >= maxX) {
+    }
+    
+    // Right wall collision
+    if (x > maxX) {
       x = maxX;
       velocityX = -Math.abs(velocityX) * bounce;
       velocityY += (Math.random() - 0.5) * 8;
       rotationSpeed = -rotationSpeed * 1.8 + (Math.random() - 0.5) * 10;
     }
     
-    // Top/Bottom walls with clamping
-    if (y <= 0) {
+    // Top wall collision
+    if (y < 0) {
       y = 0;
       velocityY = Math.abs(velocityY) * bounce;
       velocityX += (Math.random() - 0.5) * 8;
       rotationSpeed = -rotationSpeed * 1.6 + (Math.random() - 0.5) * 12;
-    } else if (y >= maxY) {
+    }
+    
+    // Bottom wall collision
+    if (y > maxY) {
       y = maxY;
       velocityY = -Math.abs(velocityY) * bounce;
       velocityX += (Math.random() - 0.5) * 8;
@@ -200,7 +208,7 @@ function initChaoticLoadingScreen() {
       velocityX += (Math.random() - 0.5) * 6;
     }
     
-    // Clamp final position to bounds
+    // Safety clamp - ensure within bounds
     x = Math.max(0, Math.min(x, maxX));
     y = Math.max(0, Math.min(y, maxY));
     
@@ -233,15 +241,14 @@ let autoRefreshInterval = null;
 // ========== Dark Mode System ==========
 const DarkMode = {
   init() {
-    // Check for saved preference or system preference
+    // Only apply dark mode if explicitly saved by user
+    // Default to light mode, ignore system preference
     const saved = localStorage.getItem('vibecheck_theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     
-    if (saved === 'dark' || (!saved && prefersDark)) {
+    if (saved === 'dark') {
       document.documentElement.classList.add('dark-mode');
-    } else if (saved === 'light') {
-      document.documentElement.classList.add('light-mode');
     }
+    // Light mode is the default, no need to add a class
     
     this.updateUI();
   },
@@ -251,10 +258,8 @@ const DarkMode = {
     
     if (isDark) {
       document.documentElement.classList.remove('dark-mode');
-      document.documentElement.classList.add('light-mode');
       localStorage.setItem('vibecheck_theme', 'light');
     } else {
-      document.documentElement.classList.remove('light-mode');
       document.documentElement.classList.add('dark-mode');
       localStorage.setItem('vibecheck_theme', 'dark');
     }
