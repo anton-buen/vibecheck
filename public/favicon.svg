@@ -1,0 +1,58 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Main body dome -->
+  <ellipse cx="256" cy="280" rx="180" ry="160" fill="#FF6B6B"/>
+  <ellipse cx="256" cy="280" rx="180" ry="160" fill="url(#bodyGradient)"/>
+  
+  <!-- Tentacles -->
+  <ellipse cx="120" cy="420" rx="60" ry="35" fill="#FF5252"/>
+  <ellipse cx="120" cy="420" rx="60" ry="35" fill="url(#tentacleGradient)"/>
+  <ellipse cx="392" cy="420" rx="60" ry="35" fill="#FF5252"/>
+  <ellipse cx="392" cy="420" rx="60" ry="35" fill="url(#tentacleGradient)"/>
+  
+  <ellipse cx="170" cy="450" rx="55" ry="33" fill="#FF5252"/>
+  <ellipse cx="170" cy="450" rx="55" ry="33" fill="url(#tentacleGradient)"/>
+  <ellipse cx="342" cy="450" rx="55" ry="33" fill="#FF5252"/>
+  <ellipse cx="342" cy="450" rx="55" ry="33" fill="url(#tentacleGradient)"/>
+  
+  <ellipse cx="256" cy="470" rx="55" ry="33" fill="#FF5252"/>
+  <ellipse cx="256" cy="470" rx="55" ry="33" fill="url(#tentacleGradient)"/>
+  
+  <!-- Tentacle underside stripes -->
+  <ellipse cx="120" cy="430" rx="50" ry="15" fill="#E0E0E0" opacity="0.6"/>
+  <ellipse cx="392" cy="430" rx="50" ry="15" fill="#E0E0E0" opacity="0.6"/>
+  <ellipse cx="170" cy="460" rx="45" ry="13" fill="#E0E0E0" opacity="0.6"/>
+  <ellipse cx="342" cy="460" rx="45" ry="13" fill="#E0E0E0" opacity="0.6"/>
+  <ellipse cx="256" cy="480" rx="45" ry="13" fill="#E0E0E0" opacity="0.6"/>
+  
+  <!-- Head highlight/spiral -->
+  <circle cx="280" cy="160" r="25" fill="rgba(255, 255, 255, 0.3)"/>
+  <path d="M 280 160 Q 285 155, 290 160 Q 295 165, 290 170 Q 285 175, 280 170" 
+        stroke="rgba(255, 255, 255, 0.4)" stroke-width="3" fill="none" stroke-linecap="round"/>
+  
+  <!-- Eyes (angry expression) -->
+  <ellipse cx="210" cy="250" rx="35" ry="45" fill="#000000"/>
+  <ellipse cx="302" cy="250" rx="35" ry="45" fill="#000000"/>
+  
+  <!-- Eye whites -->
+  <circle cx="218" cy="240" r="12" fill="#FFFFFF"/>
+  <circle cx="310" cy="240" r="12" fill="#FFFFFF"/>
+  
+  <!-- Angry eyebrows -->
+  <path d="M 175 220 L 230 235" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+  <path d="M 337 220 L 282 235" stroke="#000000" stroke-width="12" stroke-linecap="round"/>
+  
+  <!-- Angry mouth (frown) -->
+  <path d="M 220 310 Q 256 290 292 310" stroke="#000000" stroke-width="10" fill="none" stroke-linecap="round"/>
+  
+  <!-- Gradients -->
+  <defs>
+    <radialGradient id="bodyGradient" cx="40%" cy="30%">
+      <stop offset="0%" style="stop-color:#FF8A80;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF5252;stop-opacity:0.8" />
+    </radialGradient>
+    <linearGradient id="tentacleGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF6B6B;stop-opacity:0.9" />
+      <stop offset="100%" style="stop-color:#D32F2F;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+</svg>
