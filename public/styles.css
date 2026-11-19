@@ -1309,7 +1309,7 @@ textarea {
 .loading-screen {
   position: fixed;
   inset: 0;
-  background: linear-gradient(135deg, #FF6B6B 0%, #FF8A5B 50%, #FFA07A 100%);
+  background: linear-gradient(135deg, #FF3B30 0%, #FF6B5B 50%, #FF8A70 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1322,7 +1322,7 @@ textarea {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
   animation: loadingPulse 2s ease-in-out infinite;
 }
 

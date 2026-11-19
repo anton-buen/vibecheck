@@ -19,69 +19,83 @@ function initChaoticLoadingScreen() {
     }
   }, 100);
 
-  // Weird physics parameters
+  // SUPER BOUNCY physics parameters
   let x = window.innerWidth / 2;
   let y = window.innerHeight / 2;
-  let velocityX = (Math.random() - 0.5) * 15; // Random initial velocity
-  let velocityY = (Math.random() - 0.5) * 15;
+  let velocityX = (Math.random() - 0.5) * 25; // Much faster initial velocity!
+  let velocityY = (Math.random() - 0.5) * 25;
   let rotation = 0;
-  let rotationSpeed = (Math.random() - 0.5) * 8;
+  let rotationSpeed = (Math.random() - 0.5) * 15; // Faster spins!
   
-  const gravity = 0.5; // Weird gravity
-  const bounce = 0.85; // Bounce coefficient
-  const friction = 0.99; // Air resistance
-  const chaosWobble = 0.02; // Random chaos factor
+  const gravity = 0.8; // Stronger gravity for more dramatic bounces
+  const bounce = 1.15; // GAIN energy on bounce! (>1.0 = super bouncy)
+  const friction = 0.995; // Less air resistance = stays fast longer
+  const chaosWobble = 0.08; // MUCH more chaos!
+  const maxSpeed = 30; // Cap maximum speed to keep it visible
 
   function animateOctopus() {
-    // Add weird chaos to velocity
-    velocityX += (Math.random() - 0.5) * chaosWobble * 10;
-    velocityY += (Math.random() - 0.5) * chaosWobble * 10;
+    // INTENSE chaos injection every frame!
+    velocityX += (Math.random() - 0.5) * chaosWobble * 20;
+    velocityY += (Math.random() - 0.5) * chaosWobble * 20;
     
-    // Apply gravity
+    // Apply stronger gravity
     velocityY += gravity;
     
     // Update position
     x += velocityX;
     y += velocityY;
     
-    // Apply friction
+    // Minimal friction to keep energy high
     velocityX *= friction;
     velocityY *= friction;
     
-    // Chaotic rotation
-    rotation += rotationSpeed;
-    rotationSpeed *= 0.99;
-    rotationSpeed += (Math.random() - 0.5) * 0.3;
+    // Cap speed to prevent octopus from teleporting
+    const speed = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
+    if (speed > maxSpeed) {
+      velocityX = (velocityX / speed) * maxSpeed;
+      velocityY = (velocityY / speed) * maxSpeed;
+    }
     
-    // Bounce off walls with weird physics
+    // WILD rotation with more chaos
+    rotation += rotationSpeed;
+    rotationSpeed *= 0.985; // Slower decay = longer spins
+    rotationSpeed += (Math.random() - 0.5) * 1.5; // More random spin changes
+    
+    // Bounce off walls with SUPER BOUNCY physics
     const octopusSize = 120;
     
-    // Left/Right walls
+    // Left/Right walls - CHAOTIC BOUNCES!
     if (x <= octopusSize / 2) {
       x = octopusSize / 2;
-      velocityX = Math.abs(velocityX) * bounce;
-      rotationSpeed = -rotationSpeed * 1.2; // Spin on bounce
+      velocityX = Math.abs(velocityX) * bounce; // Gain energy!
+      velocityY += (Math.random() - 0.5) * 8; // Random Y velocity change
+      rotationSpeed = -rotationSpeed * 1.8 + (Math.random() - 0.5) * 10;
     } else if (x >= window.innerWidth - octopusSize / 2) {
       x = window.innerWidth - octopusSize / 2;
       velocityX = -Math.abs(velocityX) * bounce;
-      rotationSpeed = -rotationSpeed * 1.2;
+      velocityY += (Math.random() - 0.5) * 8;
+      rotationSpeed = -rotationSpeed * 1.8 + (Math.random() - 0.5) * 10;
     }
     
-    // Top/Bottom walls
+    // Top/Bottom walls - EVEN MORE CHAOTIC!
     if (y <= octopusSize / 2) {
       y = octopusSize / 2;
       velocityY = Math.abs(velocityY) * bounce;
-      rotationSpeed = -rotationSpeed * 1.1;
+      velocityX += (Math.random() - 0.5) * 8; // Random X velocity change
+      rotationSpeed = -rotationSpeed * 1.6 + (Math.random() - 0.5) * 12;
     } else if (y >= window.innerHeight - octopusSize / 2) {
       y = window.innerHeight - octopusSize / 2;
       velocityY = -Math.abs(velocityY) * bounce;
-      rotationSpeed = -rotationSpeed * 1.1;
-      // Add extra bounce energy from bottom
-      velocityY -= Math.random() * 2;
+      velocityX += (Math.random() - 0.5) * 8;
+      rotationSpeed = -rotationSpeed * 1.6 + (Math.random() - 0.5) * 12;
+      // BIG random kick upward from floor!
+      velocityY -= Math.random() * 8;
+      velocityX += (Math.random() - 0.5) * 6;
     }
     
-    // Apply transform
-    octopus.style.transform = `translate(${x - octopusSize / 2}px, ${y - octopusSize / 2}px) rotate(${rotation}deg)`;
+    // Apply transform with slight scale variation for extra chaos
+    const scale = 1 + Math.sin(Date.now() / 200) * 0.08;
+    octopus.style.transform = `translate(${x - octopusSize / 2}px, ${y - octopusSize / 2}px) rotate(${rotation}deg) scale(${scale})`;
     
     // Continue animation
     if (!loadingScreen.classList.contains('hidden')) {
