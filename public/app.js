@@ -133,6 +133,7 @@ function initChaoticLoadingScreen() {
   }, 100);
 
   // SUPER BOUNCY physics parameters
+  const octopusSize = 120;
   let x = window.innerWidth / 2;
   let y = window.innerHeight / 2;
   let velocityX = (Math.random() - 0.5) * 25;
@@ -167,27 +168,31 @@ function initChaoticLoadingScreen() {
     rotationSpeed *= 0.985;
     rotationSpeed += (Math.random() - 0.5) * 1.5;
     
-    const octopusSize = 120;
+    // Strict viewport clamping to prevent off-screen
+    const maxX = window.innerWidth - octopusSize;
+    const maxY = window.innerHeight - octopusSize;
     
-    if (x <= octopusSize / 2) {
-      x = octopusSize / 2;
+    // Left/Right walls with clamping
+    if (x <= 0) {
+      x = 0;
       velocityX = Math.abs(velocityX) * bounce;
       velocityY += (Math.random() - 0.5) * 8;
       rotationSpeed = -rotationSpeed * 1.8 + (Math.random() - 0.5) * 10;
-    } else if (x >= window.innerWidth - octopusSize / 2) {
-      x = window.innerWidth - octopusSize / 2;
+    } else if (x >= maxX) {
+      x = maxX;
       velocityX = -Math.abs(velocityX) * bounce;
       velocityY += (Math.random() - 0.5) * 8;
       rotationSpeed = -rotationSpeed * 1.8 + (Math.random() - 0.5) * 10;
     }
     
-    if (y <= octopusSize / 2) {
-      y = octopusSize / 2;
+    // Top/Bottom walls with clamping
+    if (y <= 0) {
+      y = 0;
       velocityY = Math.abs(velocityY) * bounce;
       velocityX += (Math.random() - 0.5) * 8;
       rotationSpeed = -rotationSpeed * 1.6 + (Math.random() - 0.5) * 12;
-    } else if (y >= window.innerHeight - octopusSize / 2) {
-      y = window.innerHeight - octopusSize / 2;
+    } else if (y >= maxY) {
+      y = maxY;
       velocityY = -Math.abs(velocityY) * bounce;
       velocityX += (Math.random() - 0.5) * 8;
       rotationSpeed = -rotationSpeed * 1.6 + (Math.random() - 0.5) * 12;
@@ -195,8 +200,12 @@ function initChaoticLoadingScreen() {
       velocityX += (Math.random() - 0.5) * 6;
     }
     
+    // Clamp final position to bounds
+    x = Math.max(0, Math.min(x, maxX));
+    y = Math.max(0, Math.min(y, maxY));
+    
     const scale = 1 + Math.sin(Date.now() / 200) * 0.08;
-    octopus.style.transform = `translate(${x - octopusSize / 2}px, ${y - octopusSize / 2}px) rotate(${rotation}deg) scale(${scale})`;
+    octopus.style.transform = `translate(${x}px, ${y}px) rotate(${rotation}deg) scale(${scale})`;
     
     if (!loadingScreen.classList.contains('hidden')) {
       requestAnimationFrame(animateOctopus);
@@ -217,6 +226,51 @@ const PROMPTS = [
   "What's weighing on you right now?",
   "Beyond 'okay lang' — how are you really?"
 ];
+
+// Auto-refresh interval
+let autoRefreshInterval = null;
+
+// ========== Dark Mode System ==========
+const DarkMode = {
+  init() {
+    // Check for saved preference or system preference
+    const saved = localStorage.getItem('vibecheck_theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    if (saved === 'dark' || (!saved && prefersDark)) {
+      document.documentElement.classList.add('dark-mode');
+    } else if (saved === 'light') {
+      document.documentElement.classList.add('light-mode');
+    }
+    
+    this.updateUI();
+  },
+  
+  toggle() {
+    const isDark = document.documentElement.classList.contains('dark-mode');
+    
+    if (isDark) {
+      document.documentElement.classList.remove('dark-mode');
+      document.documentElement.classList.add('light-mode');
+      localStorage.setItem('vibecheck_theme', 'light');
+    } else {
+      document.documentElement.classList.remove('light-mode');
+      document.documentElement.classList.add('dark-mode');
+      localStorage.setItem('vibecheck_theme', 'dark');
+    }
+    
+    this.updateUI();
+    SoundFX.play('tap');
+  },
+  
+  updateUI() {
+    const btn = document.getElementById('btn-theme-toggle');
+    const isDark = document.documentElement.classList.contains('dark-mode');
+    if (btn) {
+      btn.title = isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+    }
+  }
+};
 
 // ========== State ==========
 let promptIndex = 0;
@@ -388,26 +442,64 @@ async function loadPulses() {
   try {
     const res = await fetch(`/api/pulses?room=${currentRoom}`);
     const data = await res.json();
+    
     if (res.ok && data.room) {
       pulses = data.pulses || [];
       roomMembers = data.members || [];
       localStorage.setItem(`vibecheck_backup_${currentRoom}`, JSON.stringify(pulses));
-      syncBadge.innerHTML = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polyline points="20 6 9 17 4 12"/></svg> Live`;
+      
+      // Update sync status to Live
+      syncBadge.textContent = "Live";
       syncBadge.classList.add("live");
+      syncBadge.classList.remove("offline");
+      syncBadge.title = "Synced across all devices";
     } else {
       throw new Error("Fallback to local");
     }
-  } catch {
+  } catch (err) {
     pulses = JSON.parse(localStorage.getItem(`vibecheck_backup_${currentRoom}`) || "[]");
     roomMembers = [];
-    syncBadge.innerHTML = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Local`;
+    
+    // Update sync status to Offline
+    syncBadge.textContent = "Offline (Local)";
+    syncBadge.classList.add("offline");
     syncBadge.classList.remove("live");
+    syncBadge.title = "Using local storage only";
   }
+  
   renderBoard();
   updatePriorityNotice();
   renderMemberPills();
   updateBoardBadge();
 }
+
+// Start auto-refresh polling (15 seconds)
+function startAutoRefresh() {
+  if (autoRefreshInterval) return;
+  
+  autoRefreshInterval = setInterval(() => {
+    // Only refresh if tab is visible
+    if (!document.hidden) {
+      loadPulses();
+    }
+  }, 15000); // 15 seconds
+}
+
+function stopAutoRefresh() {
+  if (autoRefreshInterval) {
+    clearInterval(autoRefreshInterval);
+    autoRefreshInterval = null;
+  }
+}
+
+// Handle visibility change
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    stopAutoRefresh();
+  } else {
+    startAutoRefresh();
+  }
+});
 
 async function savePulse(payload) {
   const btn = document.getElementById("btn-submit");
@@ -574,7 +666,11 @@ function updateBoardBadge() {
 
 function updateMascotDisplay(level) {
   const cfg = VIBE_CONFIG[level];
-  document.getElementById("main-mascot").innerHTML = renderBrandOctopusSvg(level);
+  const mascotContainer = document.getElementById("main-mascot");
+  
+  // Update inner HTML while preserving the octo-float class on the container
+  mascotContainer.innerHTML = renderBrandOctopusSvg(level);
+  
   document.getElementById("mascot-level").textContent = `Level ${level} — ${cfg.label}`;
 }
 
@@ -687,6 +783,9 @@ function switchTab(tabName) {
 
 // ========== Initialization ==========
 document.addEventListener("DOMContentLoaded", () => {
+  // Initialize dark mode
+  DarkMode.init();
+  
   // Initialize sound engine
   SoundFX.init();
   
@@ -721,6 +820,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // Tab navigation
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+  });
+
+  // Dark mode toggle
+  document.getElementById("btn-theme-toggle").addEventListener("click", () => {
+    DarkMode.toggle();
   });
 
   // Sound toggle
@@ -917,6 +1021,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize default vibe selection
   updateVibeSelection(3);
 
-  // Load pulses
-  loadPulses();
+  // Load pulses and start auto-refresh
+  loadPulses().then(() => {
+    startAutoRefresh();
+  });
 });
