@@ -120,8 +120,9 @@ function initAmbientOctopus() {
   const ambient = document.getElementById('ambientOctopus');
   if (!ambient) return;
 
-  // Render the octopus SVG (using level 1 - coral red)
-  ambient.innerHTML = renderBrandOctopusSvg(1, 'w-full h-full');
+  // Render a small, fixed-size octopus SVG
+  const octopusSVG = renderBrandOctopusSvg(1); // No size class, will be constrained by CSS
+  ambient.innerHTML = octopusSVG;
 
   const octopusSize = 88;
   let x = (window.innerWidth - octopusSize) / 2;

@@ -90,6 +90,12 @@ body {
   will-change: transform;
 }
 
+.ambient-octopus svg {
+  width: 88px;
+  height: 88px;
+  display: block;
+}
+
 body.dark-mode .ambient-octopus {
   opacity: 0.08;
 }
